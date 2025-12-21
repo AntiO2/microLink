@@ -37,8 +37,9 @@ class ContentServiceTest {
         String text = "This is a long article";
         Content.ContentType type = Content.ContentType.ARTICLE;
         String authorId = "user123";
-        MultipartFile file = null;
-
+        MultipartFile cover = null;
+        MultipartFile media = null;
+        
         Content savedContent = new Content();
         savedContent.setId(1L);
         savedContent.setTitle(title);
@@ -49,7 +50,7 @@ class ContentServiceTest {
         when(contentRepository.save(any(Content.class))).thenReturn(savedContent);
 
         // Act
-        Content result = contentService.publishContent(title, text, type, file, authorId);
+        Content result = contentService.publishContent(title, text, type, cover, media, null, authorId);
 
         // Assert
         assertNotNull(result);

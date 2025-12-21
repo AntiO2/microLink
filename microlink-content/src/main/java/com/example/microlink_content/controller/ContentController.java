@@ -1,6 +1,7 @@
 package com.example.microlink_content.controller;
 
 import com.example.microlink_content.model.Content;
+import com.example.microlink_content.model.ContentMedia;
 import com.example.microlink_content.service.ContentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +17,20 @@ public class ContentController {
     @Autowired
     private ContentService contentService;
 
+    @PostMapping("/upload")
+    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
+        String uploaderId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        ContentMedia media = contentService.uploadMedia(file, uploaderId);
+        return ResponseEntity.ok(media);
+    }
+
     @PostMapping("/publish")
     public ResponseEntity<?> publish(@RequestParam(value = "title", required = false) String title,
                                      @RequestParam("text") String text,
                                      @RequestParam(value = "contentType", defaultValue = "POST") String contentTypeStr,
-                                     @RequestParam(value = "file", required = false) MultipartFile file) {
+                                     @RequestParam(value = "cover", required = false) MultipartFile cover,
+                                     @RequestParam(value = "media", required = false) MultipartFile media,
+                                     @RequestParam(value = "mediaIds", required = false) List<Long> mediaIds) {
         String authorId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         Content.ContentType contentType;
@@ -30,7 +40,7 @@ public class ContentController {
             return ResponseEntity.badRequest().body("Invalid content type");
         }
 
-        Content content = contentService.publishContent(title, text, contentType, file, authorId);
+        Content content = contentService.publishContent(title, text, contentType, cover, media, mediaIds, authorId);
         return ResponseEntity.ok(content);
     }
 

@@ -5,8 +5,28 @@ Base URL: `/api/content`
 
 ## Content Management
 
+### Upload Media
+Upload a media file (image/video) to be used in content.
+
+- **URL**: `/upload`
+- **Method**: `POST`
+- **Headers**:
+  - `Authorization`: `Bearer <token>`
+  - `Content-Type`: `multipart/form-data`
+- **Request Parameters**:
+  - `file` (File): The media file.
+- **Response**: `200 OK`
+  ```json
+  {
+    "id": 101,
+    "url": "https://s3...",
+    "fileType": "IMAGE",
+    "contentId": null
+  }
+  ```
+
 ### Publish Content
-Upload text and media (image/video) to publish new content.
+Publish new content.
 
 - **URL**: `/publish`
 - **Method**: `POST`
@@ -14,18 +34,20 @@ Upload text and media (image/video) to publish new content.
   - `Authorization`: `Bearer <token>`
   - `Content-Type`: `multipart/form-data`
 - **Request Parameters**:
-  - `title` (String, Optional): The content title (Required for ARTICLE).
+  - `title` (String, Optional): The content title.
   - `text` (String): The content text.
   - `contentType` (String, Optional): `POST` (default), `ARTICLE`, `VIDEO`.
-  - `file` (File, Optional): Image or Video file.
+  - `cover` (File, Optional): Cover image.
+  - `media` (File, Optional): Main media file (e.g., Video).
+  - `mediaIds` (List<Long>, Optional): List of media IDs (from `/upload`) used in the content.
 - **Response**: `200 OK`
   ```json
   {
     "id": 1,
     "title": "My Article",
-    "text": "Hello World",
+    "text": "Hello World...",
     "contentType": "ARTICLE",
-    "mediaUrl": "https://s3...",
+    "coverUrl": "https://s3...",
     "status": "PENDING"
   }
   ```
