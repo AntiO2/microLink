@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://www.activiti.org/processdef">
+
+    <process id="content-review" name="Content Review Process" isExecutable="true">
+        <startEvent id="start" name="Start" />
+        <sequenceFlow sourceRef="start" targetRef="reviewTask" />
+        
+        <userTask id="reviewTask" name="Review Content" activiti:assignee="admin">
+             <documentation>Review the published content</documentation>
+        </userTask>
+        
+        <sequenceFlow sourceRef="reviewTask" targetRef="end" />
+        <endEvent id="end" name="End" />
+    </process>
+
+</definitions>
