@@ -73,14 +73,39 @@ Ensure `microlink-user` is running on port **8081**.
 2.  **Copy the `accessToken`** from the response. You will use this as `<YOUR_TOKEN>` or `<ADMIN_TOKEN>` (if the user has admin role).
 
 ### Step 1: Publish Content (User)
+
+Here are examples for different content types (`POST`, `ARTICLE`, `VIDEO`).
+
+**1. Publish a Post (Short Content)**
+```bash
+curl -X POST http://localhost:8082/api/content/publish \
+  -H "Authorization: Bearer <YOUR_TOKEN>" \
+  -F "text=Just a quick update!" \
+  -F "contentType=POST" \
+  -F "media=@/path/to/image.jpg"
+```
+
+**2. Publish an Article**
 ```bash
 curl -X POST http://localhost:8082/api/content/publish \
   -H "Authorization: Bearer <YOUR_TOKEN>" \
   -F "title=My First Article" \
-  -F "text=This is the article content." \
+  -F "text=This is the detailed content of the article." \
   -F "contentType=ARTICLE" \
-  -F "file=@/path/to/image.jpg"
+  -F "cover=@/path/to/cover.jpg"
 ```
+
+**3. Publish a Video**
+```bash
+curl -X POST http://localhost:8082/api/content/publish \
+  -H "Authorization: Bearer <YOUR_TOKEN>" \
+  -F "title=My Vlog" \
+  -F "text=Check out this video!" \
+  -F "contentType=VIDEO" \
+  -F "cover=@/path/to/thumbnail.jpg" \
+  -F "media=@/path/to/video.mp4"
+```
+
 *Expected Output*: Content object with `status: "PENDING"`.
 
 ### Step 2: List Content
