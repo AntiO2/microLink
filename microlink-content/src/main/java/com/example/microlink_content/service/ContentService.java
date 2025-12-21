@@ -21,14 +21,16 @@ public class ContentService {
     @Autowired
     private ProcessService processService;
 
-    public Content publishContent(String text, MultipartFile file, String authorId) {
+    public Content publishContent(String title, String text, Content.ContentType contentType, MultipartFile file, String authorId) {
         String mediaUrl = null;
         if (file != null && !file.isEmpty()) {
             mediaUrl = fileStorageService.storeFile(file);
         }
 
         Content content = new Content();
+        content.setTitle(title);
         content.setText(text);
+        content.setContentType(contentType);
         content.setMediaUrl(mediaUrl);
         content.setAuthorId(authorId);
         content.setStatus(Content.ContentStatus.PENDING);

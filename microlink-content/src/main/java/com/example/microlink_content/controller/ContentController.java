@@ -17,10 +17,20 @@ public class ContentController {
     private ContentService contentService;
 
     @PostMapping("/publish")
-    public ResponseEntity<?> publish(@RequestParam("text") String text,
+    public ResponseEntity<?> publish(@RequestParam(value = "title", required = false) String title,
+                                     @RequestParam("text") String text,
+                                     @RequestParam(value = "contentType", defaultValue = "POST") String contentTypeStr,
                                      @RequestParam(value = "file", required = false) MultipartFile file) {
         String authorId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Content content = contentService.publishContent(text, file, authorId);
+
+        Content.ContentType contentType;
+        try {
+            contentType = Content.ContentType.valueOf(contentTypeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid content type");
+        }
+
+        Content content = contentService.publishContent(title, text, contentType, file, authorId);
         return ResponseEntity.ok(content);
     }
 

@@ -14,13 +14,17 @@ Upload text and media (image/video) to publish new content.
   - `Authorization`: `Bearer <token>`
   - `Content-Type`: `multipart/form-data`
 - **Request Parameters**:
+  - `title` (String, Optional): The content title (Required for ARTICLE).
   - `text` (String): The content text.
+  - `contentType` (String, Optional): `POST` (default), `ARTICLE`, `VIDEO`.
   - `file` (File, Optional): Image or Video file.
 - **Response**: `200 OK`
   ```json
   {
     "id": 1,
+    "title": "My Article",
     "text": "Hello World",
+    "contentType": "ARTICLE",
     "mediaUrl": "https://s3...",
     "status": "PENDING"
   }

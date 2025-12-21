@@ -12,10 +12,17 @@ public class Content {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String title;
+
     @Column(nullable = false)
     private String text;
 
     private String mediaUrl;
+    
+    private String coverUrl;
+
+    @Enumerated(EnumType.STRING)
+    private ContentType contentType;
 
     @Column(nullable = false)
     private String authorId;
@@ -29,5 +36,11 @@ public class Content {
         PENDING,
         PUBLISHED,
         REJECTED
+    }
+
+    public enum ContentType {
+        POST,
+        ARTICLE,
+        VIDEO
     }
 }

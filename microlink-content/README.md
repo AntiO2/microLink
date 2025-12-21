@@ -76,7 +76,9 @@ Ensure `microlink-user` is running on port **8081**.
 ```bash
 curl -X POST http://localhost:8082/api/content/publish \
   -H "Authorization: Bearer <YOUR_TOKEN>" \
-  -F "text=My new post" \
+  -F "title=My First Article" \
+  -F "text=This is the article content." \
+  -F "contentType=ARTICLE" \
   -F "file=@/path/to/image.jpg"
 ```
 *Expected Output*: Content object with `status: "PENDING"`.
