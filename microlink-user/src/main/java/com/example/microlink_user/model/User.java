@@ -3,6 +3,7 @@ package com.example.microlink_user.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,6 +27,20 @@ public class User {
 
     @Column(nullable = false, length = 120)
     private String password;
+
+    @Column(length = 50)
+    private String nickname;
+
+    @Column(length = 255)
+    private String avatarUrl;
+
+    @Column(length = 255)
+    private String bio;
+
+    @Column(length = 20)
+    private String phoneNumber;
+
+    private LocalDateTime lastLoginTime;
 
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> roles = new HashSet<>();

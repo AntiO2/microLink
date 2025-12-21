@@ -13,12 +13,10 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collections;
 
-@Component
 public class AuthTokenFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtils jwtUtils;
@@ -38,7 +36,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 username,
-                                null,
+                                jwt,
                                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 

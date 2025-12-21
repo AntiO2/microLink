@@ -1,6 +1,6 @@
 # User Management Microservice (microlink-user)
 
-This module handles user registration, authentication, and user-related workflows using Activiti.
+This module handles user registration, authentication, and user-related workflows using Flowable.
 
 ## 1. Prerequisites & Installation
 
@@ -33,15 +33,15 @@ The service follows RESTful standards. All endpoints are prefixed with `/api/use
 *   **User**: `/api/user/*`
 *   **Process**: `/api/user/process/*`
 
-### Activiti Workflow
-We use **Activiti 7** to manage business processes.
+### Flowable Workflow
+We use **Flowable** to manage business processes.
 *   **Definition**: `src/main/resources/processes/user-onboarding.bpmn20.xml` defines a simple approval process.
-*   **Engine**: Automatically configured via `activiti-spring-boot-starter`.
-*   **Verification**: We exposed endpoints to Start, Query, and Complete tasks.
+*   **Engine**: Automatically configured via `flowable-spring-boot-starter`.
+*   **Integration**:
+    *   **Auto-Trigger**: User registration automatically starts an `user-onboarding` process.
+    *   **Business Key**: Processes are linked to `userId`.
 
 ## 3. Step-by-Step Verification Guide
-
-Follow these steps to verify all functionalities.
 
 ### Step 1: Verify User Registration & Login (REST Functionality)
 
@@ -49,9 +49,9 @@ Follow these steps to verify all functionalities.
 ```bash
 curl -X POST http://localhost:8081/api/user/auth/register \
 -H "Content-Type: application/json" \
--d '{"username": "testuser", "email": "test@example.com", "password": "password123"}'
+-d '{"username": "testuser", "nickname": "Test Nick", "email": "test@example.com", "password": "password123"}'
 ```
-*Expected Output*: `{"message":"User registered successfully!"}`
+*Expected Output*: `{"code":200, "message":"User registered successfully!", "data": {...}}`
 
 **2. Login**
 ```bash
@@ -59,24 +59,28 @@ curl -X POST http://localhost:8081/api/user/auth/login \
 -H "Content-Type: application/json" \
 -d '{"username": "testuser", "password": "password123"}'
 ```
-*Expected Output*: JSON containing `"token": "eyJ..."`. **Copy this token.**
+*Expected Output*: JSON containing `data.token`, `data.userId`, `data.expiresIn`. **Copy this token.**
 
 **3. Get User Profile**
 ```bash
 curl -X GET http://localhost:8081/api/user/me \
 -H "Authorization: Bearer <YOUR_TOKEN>"
 ```
-*Expected Output*: User details JSON.
+*Expected Output*: User details JSON with extended fields.
 
-### Step 2: Verify Activiti Workflow (Workflow Functionality)
-
-**1. Start Onboarding Process**
-This starts the BPMN process defined in the project.
+**4. Update User Profile**
 ```bash
-curl -X POST http://localhost:8081/api/user/process/start \
--H "Authorization: Bearer <YOUR_TOKEN>"
+curl -X PATCH http://localhost:8081/api/user/me \
+-H "Authorization: Bearer <YOUR_TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"bio": "New Bio", "avatarUrl": "http://example.com/avatar.jpg"}'
 ```
-*Expected Output*: `{"processId":"...", "message":"Onboarding process started..."}`
+*Expected Output*: Updated user details.
+
+### Step 2: Verify Workflow Functionality
+
+**1. Verify Auto-Started Process**
+Registration automatically started a process. You can verify by checking tasks.
 
 **2. Verify Task Generation (Check "Approve User" Task)**
 The process creates a task assigned to `admin`.
@@ -92,15 +96,14 @@ Simulate an admin approving the user.
 curl -X POST http://localhost:8081/api/user/process/tasks/<TASK_ID>/complete \
 -H "Authorization: Bearer <YOUR_TOKEN>"
 ```
-*Expected Output*: `{"message":"Task completed"}`
+*Expected Output*: `{"code":200, "message":"Task completed"}`
 
-**4. Verify Process End**
-Query tasks again. The list should be empty.
+**4. My Tasks**
+Check tasks assigned to the current user.
 ```bash
-curl -X GET "http://localhost:8081/api/user/process/tasks?assignee=admin" \
+curl -X GET "http://localhost:8081/api/user/process/my-tasks" \
 -H "Authorization: Bearer <YOUR_TOKEN>"
 ```
-*Expected Output*: `[]`
 
 ## 4. Running Tests
 To verify the code integrity (uses in-memory H2 database):

@@ -1,7 +1,10 @@
 package com.example.microlink_content.service;
 
 import com.example.microlink_content.model.Content;
+import com.example.microlink_content.payload.request.PublishRequest;
+import com.example.microlink_content.repository.ContentMediaRepository;
 import com.example.microlink_content.repository.ContentRepository;
+import com.example.microlink_content.client.UserServiceClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,10 +25,16 @@ class ContentServiceTest {
     private ContentRepository contentRepository;
 
     @Mock
+    private ContentMediaRepository contentMediaRepository;
+
+    @Mock
     private FileStorageService fileStorageService;
 
     @Mock
     private ProcessService processService;
+
+    @Mock
+    private UserServiceClient userServiceClient;
 
     @InjectMocks
     private ContentService contentService;
@@ -34,23 +43,26 @@ class ContentServiceTest {
     void testPublishContent_Article() {
         // Arrange
         String title = "My Article";
-        String text = "This is a long article";
-        Content.ContentType type = Content.ContentType.ARTICLE;
+        String contentText = "This is a long article";
+        String type = "ARTICLE";
         String authorId = "user123";
-        MultipartFile cover = null;
-        MultipartFile media = null;
+        
+        PublishRequest request = new PublishRequest();
+        request.setTitle(title);
+        request.setContent(contentText);
+        request.setContentType(type);
         
         Content savedContent = new Content();
         savedContent.setId(1L);
         savedContent.setTitle(title);
-        savedContent.setText(text);
-        savedContent.setContentType(type);
+        savedContent.setText(contentText);
+        savedContent.setContentType(Content.ContentType.ARTICLE);
         savedContent.setStatus(Content.ContentStatus.PENDING);
 
         when(contentRepository.save(any(Content.class))).thenReturn(savedContent);
 
         // Act
-        Content result = contentService.publishContent(title, text, type, cover, media, null, authorId);
+        Content result = contentService.publishContent(request, authorId);
 
         // Assert
         assertNotNull(result);

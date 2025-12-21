@@ -26,6 +26,12 @@ public class ProcessService {
     }
 
     @Transactional
+    public String startProcess(String processKey, String businessKey, Map<String, Object> variables) {
+        ProcessInstance instance = runtimeService.startProcessInstanceByKey(processKey, businessKey, variables);
+        return instance.getId();
+    }
+
+    @Transactional
     public List<Task> getTasks(String assignee) {
         return taskService.createTaskQuery().taskAssignee(assignee).list();
     }
