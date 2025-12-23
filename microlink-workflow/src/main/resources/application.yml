@@ -1,0 +1,28 @@
+server:
+  port: 8085
+project:
+  manifest:
+    file:
+      path: classpath:/default-project.json
+spring:
+  application:
+    name: microlink-workflow
+
+  activiti:
+    database-schema-update: true
+    check-process-definitions: false
+    deployment-mode: single-resource
+    history-level: full
+    db-history-used: true
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 10.77.110.31:8848
+
+  datasource:
+    url: jdbc:mysql://10.77.110.31:3307/microlink_workflow?useUnicode=true&allowPublicKeyRetrieval=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+

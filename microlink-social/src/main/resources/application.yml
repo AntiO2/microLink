@@ -1,0 +1,15 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: microlink-social
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 10.77.110.31:8848
+  datasource:
+    url: jdbc:mysql://10.77.110.31:3308/microlink_social?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: your_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
