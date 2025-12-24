@@ -3,14 +3,19 @@
              xmlns:activiti="http://activiti.org/bpmn"
              targetNamespace="Examples">
 
-    <process id="publishProcess" name="Content Publish Process" isExecutable="true">
+    <process id="content-publish-process" name="Content Publish Process" isExecutable="true">
         <startEvent id="start" />
-        <sequenceFlow sourceRef="start" targetRef="initSocialTask" />
+        <sequenceFlow sourceRef="start" targetRef="autoReviewTask" />
 
-        <serviceTask id="initSocialTask" name="Initialize Social Data"
-                     activiti:delegateExpression="${socialInitDelegate}" />
+        <serviceTask id="autoReviewTask" name="Automated Content Review"
+                     activiti:delegateExpression="${contentReviewDelegate}" />
+        
+        <sequenceFlow sourceRef="autoReviewTask" targetRef="publishTask" />
 
-        <sequenceFlow sourceRef="initSocialTask" targetRef="end" />
+        <serviceTask id="publishTask" name="Publish Content"
+                     activiti:delegateExpression="${contentPublishDelegate}" />
+
+        <sequenceFlow sourceRef="publishTask" targetRef="end" />
         <endEvent id="end" />
     </process>
 </definitions>
