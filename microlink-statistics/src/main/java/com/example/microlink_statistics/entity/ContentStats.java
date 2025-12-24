@@ -1,7 +1,7 @@
 package com.example.microlink_statistics.entity;
 
+import jakarta.persistence.*;
 import lombok.Data;
-import javax.persistence.*;
 
 /**
  * 内容热度统计实体类。

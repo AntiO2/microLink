@@ -1,4 +1,4 @@
-package com.example.microlink_statistics.test;
+package com.example.microlink_statistics;
 
 import com.example.microlink_statistics.dto.ContentInteractionEvent;
 import com.example.microlink_statistics.dto.UserActivityEvent;
@@ -61,7 +61,7 @@ public class TestKafkaProducer implements CommandLineRunner {
         UserActivityEvent event = new UserActivityEvent();
         event.setUserId(userId);
         event.setTimestamp(LocalDateTime.now());
-        event.setActivityType("APP_OPEN");
+        event.setEventType("APP_OPEN");
         logger.info("Sending UserActivityEvent for userId: {}", userId);
         kafkaTemplate.send("user-activity", event);
     }
@@ -70,7 +70,7 @@ public class TestKafkaProducer implements CommandLineRunner {
         ContentInteractionEvent event = new ContentInteractionEvent();
         event.setContentId(contentId);
         event.setUserId("user-test-" + contentId); // 简单模拟一个用户ID
-        event.setInteractionType(interactionType);
+        event.setEventType(interactionType);
         event.setTimestamp(LocalDateTime.now());
         logger.info("Sending ContentInteractionEvent for contentId: {}, type: {}", contentId, interactionType);
         kafkaTemplate.send("content-interactions", event);

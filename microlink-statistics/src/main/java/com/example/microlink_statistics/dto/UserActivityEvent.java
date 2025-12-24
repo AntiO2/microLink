@@ -18,7 +18,7 @@ public class UserActivityEvent implements Serializable {
     /**
      * 触发事件的用户 ID。
      */
-    private Long userId;
+    private String userId;
 
     /**
      * 事件类型。

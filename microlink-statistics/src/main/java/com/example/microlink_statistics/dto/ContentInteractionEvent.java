@@ -20,7 +20,7 @@ public class ContentInteractionEvent implements Serializable {
     /**
      * 触发事件的用户 ID。
      */
-    private Long userId;
+    private String userId;
 
     /**
      * 被互动的内容 ID。

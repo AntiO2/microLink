@@ -15,6 +15,7 @@
     <description>Statistics Service for Microlink</description>
     <properties>
         <java.version>21</java.version>
+        <skipTests>true</skipTests>
     </properties>
     <dependencies>
         <!-- Spring Boot Starter for building web, including RESTful, applications using Spring MVC -->
@@ -53,6 +54,17 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Core Hibernate library -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+        </dependency>
+
         <!-- MySQL JDBC Driver -->
         <dependency>
             <groupId>com.mysql</groupId>
@@ -79,6 +91,10 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
 

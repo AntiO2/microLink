@@ -1,8 +1,11 @@
 package com.example.microlink_statistics.repository;
 
 import com.example.microlink_statistics.entity.ContentStats;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * ContentStats 实体的 JPA Repository。
