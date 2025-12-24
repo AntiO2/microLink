@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * 用于承载从 Kafka 接收的内容相关互动消息，例如点赞、评论、分享等。
  * </p>
  *
- * @author Rolland
+ * @author Rolland1944
  */
 @Data
 public class ContentInteractionEvent implements Serializable {

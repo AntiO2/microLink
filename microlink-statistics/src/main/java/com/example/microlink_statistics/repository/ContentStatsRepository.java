@@ -12,5 +12,19 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface ContentStatsRepository extends JpaRepository<ContentStats, Long> {
-    // 可以在此定义自定义查询方法，例如：查询点赞数最多的 TOP N 内容。
+    /**
+     * 查询点赞数最多的 TOP N 内容统计信息。
+     * Spring Data JPA 会自动解析方法名并生成类似 "SELECT * FROM content_stats ORDER BY like_count DESC LIMIT N" 的 SQL。
+     *
+     * @param pageable 包含分页和排序信息。例如 PageRequest.of(0, 10, Sort.by("likeCount").descending())
+     * @return 内容统计信息列表
+     */
+    List<ContentStats> findAllByOrderByLikeCountDesc(Pageable pageable);
+    /**
+     * 查询评论数最多的 TOP N 内容统计信息。
+     *
+     * @param pageable 包含分页信息，例如 PageRequest.of(0, 10)
+     * @return 内容统计信息列表
+     */
+    List<ContentStats> findAllByOrderByCommentCountDesc(Pageable pageable);
 }
