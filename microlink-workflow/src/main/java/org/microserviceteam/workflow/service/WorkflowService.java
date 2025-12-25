@@ -87,7 +87,7 @@ public class WorkflowService {
 
         // 1. 自动关联父流程 ID (如果存在)
         if (parentExecution != null) {
-            variables.put("parentProcessInstanceId", parentExecution.getProcessInstanceId());
+            variables.put("parentInstanceId", parentExecution.getProcessInstanceId());
         }
 
         // 2. 提取或生成 BusinessKey (建议从变量中提取 key，方便在 ACT_RU_EXECUTION 查看)
