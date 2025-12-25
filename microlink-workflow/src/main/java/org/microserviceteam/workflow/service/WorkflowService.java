@@ -9,6 +9,7 @@ import org.activiti.engine.RuntimeService;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.impl.util.io.InputStreamSource;
 import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.microserviceteam.workflow.config.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,19 +50,27 @@ public class WorkflowService {
         );
         BpmnModel bpmnModel = converter.convertToBpmnModel(isr, true, false);
 
+        // 1. 执行部署
         Deployment deployment = repositoryService.createDeployment()
                 .addBpmnModel("dynamic_" + System.currentTimeMillis() + ".bpmn20.xml", bpmnModel)
                 .name(flowName)
                 .deploy();
 
-        String processKey = repositoryService.createProcessDefinitionQuery()
+        // 2. 修复：使用 .list() 而不是 .singleResult()
+        List<ProcessDefinition> processDefinitions = repositoryService.createProcessDefinitionQuery()
                 .deploymentId(deployment.getId())
-                .singleResult()
-                .getKey();
+                .list();
+
+        // 3. 将所有流程 Key 拼接起来返回
+        String processKeys = processDefinitions.stream()
+                .map(ProcessDefinition::getKey)
+                .collect(Collectors.joining(", "));
 
         Map<String, String> result = new HashMap<>();
         result.put("deploymentId", deployment.getId());
-        result.put("processKey", processKey);
+        result.put("processKeys", processKeys); // 返回如: "index-sync-process, data-collect, search-query"
+        result.put("status", "Success");
+
         return result;
     }
 
