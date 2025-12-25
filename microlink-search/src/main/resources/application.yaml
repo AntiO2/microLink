@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: microlink-service
+    name: microlink-search
   datasource:
     url: jdbc:mysql://10.77.110.31:3308/microlink_social?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root

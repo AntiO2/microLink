@@ -1,10 +1,12 @@
 package org.microserviceteam.workflow.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.activiti.bpmn.converter.BpmnXMLConverter;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
+import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.impl.util.io.InputStreamSource;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.runtime.ProcessInstance;
@@ -28,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 
 
 @Service
+@Slf4j
 public class WorkflowService {
 
     @Autowired
@@ -63,9 +66,53 @@ public class WorkflowService {
     }
 
     /**
+     * 通过消息名称启动流程 (用于 Message Start Event)
+     *
+     * @param messageName BPMN中定义的message name
+     * @param variables   流程变量
+     * @param parentExecution 可选的父执行上下文（用于手动关联父子ID）
+     * @return 流程实例ID
+     */
+    public Map<String, Object> startByMessage(String messageName, Map<String, Object> variables, DelegateExecution parentExecution) {
+        log.info(">>> 收到消息触发请求. Name: {}, Variables: {}", messageName, variables);
+
+        // 1. 自动关联父流程 ID (如果存在)
+        if (parentExecution != null) {
+            variables.put("parentProcessInstanceId", parentExecution.getProcessInstanceId());
+        }
+
+        // 2. 提取或生成 BusinessKey (建议从变量中提取 key，方便在 ACT_RU_EXECUTION 查看)
+        String businessKey = variables.getOrDefault("businessKey", "BK_" + System.currentTimeMillis()).toString();
+
+        // 3. 启动流程
+        ProcessInstance pi = runtimeService.startProcessInstanceByMessage(messageName, businessKey, variables);
+
+        // 4. 组装返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("processInstanceId", pi.getId());
+        result.put("processDefinitionId", pi.getProcessDefinitionId());
+        result.put("businessKey", pi.getBusinessKey());
+
+        log.info(">>> 流程已启动. InstanceId: {}", pi.getId());
+        return collectDeepInfo(pi.getId());
+    }
+
+    /**
      * 核心启动与全量结果采集方法
      */
     public Map<String, Object> start(String processKey, Map<String, Object> variables) {
+        return start(processKey, variables, null);
+    }
+
+    /**
+     * 核心启动与全量结果采集方法
+     */
+    public Map<String, Object> start(String processKey, Map<String, Object> variables, DelegateExecution execution) {
+        if(execution != null)
+        {
+            variables.put("parentInstanceId", execution.getProcessInstanceId());
+        }
+
         // 1. 启动流程
         variables.put("executionLogs", new ArrayList<String>());
         ProcessInstance pi = runtimeService.startProcessInstanceByKey(processKey, variables);
@@ -97,7 +144,7 @@ public class WorkflowService {
                 .orderByHistoricActivityInstanceStartTime().asc().list()
                 .stream().map(activity -> {
                     Map<String, Object> m = new HashMap<>();
-                    m.put("node", activity.getActivityName());
+                    m.put("node", activity.getActivityId());
                     m.put("duration", activity.getDurationInMillis() + "ms");
                     return m;
                 }).collect(Collectors.toList());
@@ -114,13 +161,23 @@ public class WorkflowService {
                 .variableValueEquals("parentInstanceId", instanceId)
                 .list();
 
+        collectChildrenProcessesInfo(children, node);
+
+        children = historyService.createHistoricProcessInstanceQuery()
+                .superProcessInstanceId(instanceId) // 引擎自动填充的字段
+                .list();
+
+        collectChildrenProcessesInfo(children, node);
+
+        return node;
+    }
+
+    private void collectChildrenProcessesInfo(List<HistoricProcessInstance> children, Map<String, Object> node) {
         if (!children.isEmpty()) {
             List<Map<String, Object>> subProcesses = children.stream()
                     .map(child -> collectDeepInfo(child.getId())) // 递归调用自身
                     .collect(Collectors.toList());
             node.put("subProcessResults", subProcesses); // 这里就是 Postman 里的递归结构
         }
-
-        return node;
     }
 }

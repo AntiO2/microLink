@@ -34,4 +34,17 @@ public class WorkflowController {
 
         return Result.success(processDeepInfo);
     }
+
+    /**
+     * 极简通用消息触发器
+     * 无论业务是搜索、订单还是审批，只要 BPMN 里定义了 messageName，就走这一个接口
+     */
+    @PostMapping("/message/{messageName}")
+    public Result<Map<String, Object>> startByMessage(@PathVariable String messageName,
+                                                      @RequestBody Map<String, Object> variables) {
+        // 调用 Service，parentExecution 传 null 表示这是根流程启动
+        Map<String, Object> result = workflowService.startByMessage(messageName, variables, null);
+
+        return Result.success(result);
+    }
 }

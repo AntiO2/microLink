@@ -49,7 +49,7 @@ public abstract class BaseWorkflowDelegate implements JavaDelegate {
      * 往流程变量 executionLogs 列表中追加消息
      */
     @SuppressWarnings("unchecked")
-    protected void addLog(DelegateExecution execution, String message) {
+    protected synchronized void addLog(DelegateExecution execution, String message) {
         List<String> logs = (List<String>) execution.getVariable(Constants.EXECUTION_LOGS);
         if (logs == null) {
             logs = new ArrayList<>();
