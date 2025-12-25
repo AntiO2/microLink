@@ -37,6 +37,14 @@ public class ProcessService {
     }
 
     @Transactional
+    public List<Task> getTasks(String assignee, String businessKey) {
+        return taskService.createTaskQuery()
+                .taskAssignee(assignee)
+                .processInstanceBusinessKey(businessKey)
+                .list();
+    }
+
+    @Transactional
     public void completeTask(String taskId) {
         taskService.complete(taskId);
     }

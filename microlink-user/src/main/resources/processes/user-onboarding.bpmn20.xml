@@ -6,13 +6,17 @@
 
     <process id="user-onboarding" name="User Onboarding Process" isExecutable="true">
         <startEvent id="startEvent" name="Start" />
-        <sequenceFlow sourceRef="startEvent" targetRef="userTask" />
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="userTask" />
         
         <userTask id="userTask" name="Approve User" activiti:assignee="admin">
              <documentation>Approve the new user registration</documentation>
+             <extensionElements>
+                 <activiti:taskListener event="complete" delegateExpression="${updateUserStatusListener}" />
+             </extensionElements>
         </userTask>
         
-        <sequenceFlow sourceRef="userTask" targetRef="endEvent" />
+        <sequenceFlow id="flow2" sourceRef="userTask" targetRef="endEvent" />
+
         <endEvent id="endEvent" name="End" />
     </process>
 

@@ -31,6 +31,14 @@ public class ProcessService {
     }
 
     @Transactional
+    public List<Task> getTasksByProcessKey(String assignee, String processKey) {
+        return taskService.createTaskQuery()
+                .taskAssignee(assignee)
+                .processDefinitionKey(processKey)
+                .list();
+    }
+
+    @Transactional
     public void completeTask(String taskId) {
         taskService.complete(taskId);
     }

@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Service
-@Primary
 public class S3StorageServiceImpl implements FileStorageService {
 
     @Value("${aws.s3.accessKey}")

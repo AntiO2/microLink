@@ -163,6 +163,7 @@ public class ContentService {
         ContentListResponse response = new ContentListResponse();
         response.setId(content.getId());
         response.setTitle(content.getTitle());
+        response.setContent(content.getText());
         response.setSummary(content.getSummary());
         response.setCoverUrl(content.getCoverUrl());
         response.setStatus(content.getStatus().name());

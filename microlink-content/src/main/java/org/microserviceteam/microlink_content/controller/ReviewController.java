@@ -25,7 +25,7 @@ public class ReviewController {
     @GetMapping("/tasks")
     public ResponseEntity<List<Map<String, Object>>> getReviewTasks() {
         // In real world, we check if user is admin
-        List<Task> tasks = processService.getTasks("admin");
+        List<Task> tasks = processService.getTasksByProcessKey("admin", "content-review");
         
         List<Map<String, Object>> response = new ArrayList<>();
         for (Task task : tasks) {

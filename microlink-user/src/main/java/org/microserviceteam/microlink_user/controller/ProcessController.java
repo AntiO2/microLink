@@ -6,6 +6,7 @@ import org.microserviceteam.microlink_user.service.ProcessService;
 import org.flowable.task.api.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,7 @@ public class ProcessController {
         
         Map<String, Object> variables = new HashMap<>();
         variables.put("applicant", username);
+        variables.put("userId", userDetails.getId());
         
         // Pass userId as businessKey
         String processId = processService.startProcess("user-onboarding", String.valueOf(userDetails.getId()), variables);
@@ -41,8 +43,15 @@ public class ProcessController {
     }
 
     @GetMapping("/tasks")
-    public ResponseEntity<?> getTasks(@RequestParam String assignee) {
-        List<Task> tasks = processService.getTasks(assignee);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getTasks(@RequestParam String assignee, 
+                                      @RequestParam(required = false) String businessKey) {
+        List<Task> tasks;
+        if (businessKey != null) {
+            tasks = processService.getTasks(assignee, businessKey);
+        } else {
+            tasks = processService.getTasks(assignee);
+        }
         List<Map<String, String>> dtos = tasks.stream().map(task -> {
             Map<String, String> map = new HashMap<>();
             map.put("id", task.getId());
@@ -71,6 +80,7 @@ public class ProcessController {
     }
 
     @PostMapping("/tasks/{taskId}/complete")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> completeTask(@PathVariable String taskId) {
         processService.completeTask(taskId);
         return ResponseEntity.ok(ApiResponse.success("Task completed", null));
