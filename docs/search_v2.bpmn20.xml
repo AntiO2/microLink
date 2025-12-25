@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" name="" targetNamespace="http://org.microserviceteam/search-system">
+    <message id="MSG_INDEX_SYNC" name="INDEX_SYNC_MESSAGE" />
+    <collaboration id="collab-search-system">
+        <participant id="pool-index" name="内容同步池" processRef="index-sync-process" />
+        <participant id="pool-collect" name="数据采集池" processRef="data-collection-process" />
+        <participant id="pool-query" name="搜索查询池" processRef="search-query-process" />
+        <messageFlow id="MessageFlow_1754juj" sourceRef="task-trigger-collect-i" targetRef="start-collect" />
+        <messageFlow id="MessageFlow_0kepety" sourceRef="task-trigger-collect-q" targetRef="start-collect" />
+    </collaboration>
+    <process id="index-sync-process" isExecutable="true">
+        <endEvent id="end-index" />
+        <parallelGateway id="gw-index-join" />
+        <serviceTask id="task-trigger-collect-i" name="发送日志" activiti:delegateExpression="${triggerCollectionDelegate}" />
+        <serviceTask id="task-es-index" name="ES建立索引" activiti:delegateExpression="${persistenceDelegate}" />
+        <parallelGateway id="gw-index-split">
+            <incoming>SequenceFlow_1kjl8sa</incoming>
+        </parallelGateway>
+        <sequenceFlow id="SequenceFlow_1kjl8sa" name="数据合法" sourceRef="ExclusiveGateway_0g730g4" targetRef="gw-index-split">
+            <conditionExpression xsi:type="tFormalExpression">${isDataValid == true}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="SequenceFlow_0xxsv9w" sourceRef="start-index" targetRef="preprocess-index-data" />
+        <sequenceFlow id="f6" sourceRef="gw-index-join" targetRef="end-index" />
+        <sequenceFlow id="f5" sourceRef="task-trigger-collect-i" targetRef="gw-index-join" />
+        <sequenceFlow id="f4" sourceRef="task-es-index" targetRef="gw-index-join" />
+        <sequenceFlow id="f3" sourceRef="gw-index-split" targetRef="task-trigger-collect-i" />
+        <sequenceFlow id="f2" sourceRef="gw-index-split" targetRef="task-es-index" />
+        <startEvent id="start-index">
+            <outgoing>SequenceFlow_0xxsv9w</outgoing>
+            <messageEventDefinition id="MessageEventDefinition_03y341y" messageRef="MSG_INDEX_SYNC" />
+        </startEvent>
+        <serviceTask id="preprocess-index-data" name="数据预处理" activiti:delegateExpression="${preProcessDelegate}">
+            <incoming>SequenceFlow_0xxsv9w</incoming>
+            <outgoing>SequenceFlow_1bhd2p8</outgoing>
+        </serviceTask>
+        <sequenceFlow id="SequenceFlow_1bhd2p8" sourceRef="preprocess-index-data" targetRef="ExclusiveGateway_0g730g4" />
+        <exclusiveGateway id="ExclusiveGateway_0g730g4">
+            <incoming>SequenceFlow_1bhd2p8</incoming>
+            <outgoing>SequenceFlow_1kjl8sa</outgoing>
+            <outgoing>SequenceFlow_0wuci03</outgoing>
+        </exclusiveGateway>
+        <sequenceFlow id="SequenceFlow_0wuci03" name="数据非法" sourceRef="ExclusiveGateway_0g730g4" targetRef="EndEvent_1f2zyku">
+            <conditionExpression xsi:type="tFormalExpression">${isDataValid == false}</conditionExpression>
+        </sequenceFlow>
+        <endEvent id="EndEvent_1f2zyku">
+            <incoming>SequenceFlow_0wuci03</incoming>
+        </endEvent>
+        <textAnnotation id="TextAnnotation_0zndyo5">
+            <text>判断数据合法</text>
+        </textAnnotation>
+        <association id="Association_103bdul" sourceRef="ExclusiveGateway_0g730g4" targetRef="TextAnnotation_0zndyo5" />
+    </process>
+    <process id="data-collection-process" isExecutable="true">
+        <startEvent id="start-collect" />
+        <serviceTask id="task-clean" name="收集日志" activiti:delegateExpression="${collectionDelegate}" />
+        <parallelGateway id="gw-storage" />
+        <serviceTask id="task-db-save" name="存入DB" activiti:delegateExpression="${collectionDelegate}" />
+        <serviceTask id="task-analysis-save" name="存入分析引擎" activiti:delegateExpression="${collectionDelegate}" />
+        <parallelGateway id="ExclusiveGateway_18msj0f" />
+        <endEvent id="EndEvent_07tav9e" />
+        <sequenceFlow id="s1" sourceRef="start-collect" targetRef="task-clean" />
+        <sequenceFlow id="s2" sourceRef="task-clean" targetRef="gw-storage" />
+        <sequenceFlow id="SequenceFlow_1o2p4gg" sourceRef="gw-storage" targetRef="task-db-save" />
+        <sequenceFlow id="SequenceFlow_1bwi6gu" sourceRef="gw-storage" targetRef="task-analysis-save" />
+        <sequenceFlow id="SequenceFlow_0qsigmp" sourceRef="task-db-save" targetRef="ExclusiveGateway_18msj0f" />
+        <sequenceFlow id="SequenceFlow_0jaqz6t" sourceRef="task-analysis-save" targetRef="ExclusiveGateway_18msj0f" />
+        <sequenceFlow id="SequenceFlow_13lvnak" sourceRef="ExclusiveGateway_18msj0f" targetRef="EndEvent_07tav9e" />
+    </process>
+    <process id="search-query-process" isExecutable="true">
+        <startEvent id="start-query">
+            <outgoing>q1</outgoing>
+        </startEvent>
+        <parallelGateway id="gw-query-split" />
+        <serviceTask id="task-highlight-search" name="高亮查询" activiti:delegateExpression="${searchDelegate}" />
+        <serviceTask id="task-trigger-collect-q" name="发送日志" activiti:delegateExpression="${triggerCollectionDelegate}" />
+        <parallelGateway id="gw-query-join" />
+        <endEvent id="end-query" />
+        <sequenceFlow id="q1" sourceRef="start-query" targetRef="gw-query-split" />
+        <sequenceFlow id="q2" sourceRef="gw-query-split" targetRef="task-highlight-search" />
+        <sequenceFlow id="q3" sourceRef="gw-query-split" targetRef="task-trigger-collect-q" />
+        <sequenceFlow id="q4" sourceRef="task-highlight-search" targetRef="gw-query-join" />
+        <sequenceFlow id="q5" sourceRef="task-trigger-collect-q" targetRef="gw-query-join" />
+        <sequenceFlow id="q6" sourceRef="gw-query-join" targetRef="end-query" />
+    </process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_SearchService">
+        <bpmndi:BPMNPlane id="BPMNPlane_SearchService" bpmnElement="collab-search-system">
+            <bpmndi:BPMNShape id="SH_pool-index" bpmnElement="pool-index" isHorizontal="true">
+                <dc:Bounds x="-370" y="130" width="850" height="320" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_gw-index-split" bpmnElement="gw-index-split">
+                <dc:Bounds x="60" y="273" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_task-es-index" bpmnElement="task-es-index">
+                <dc:Bounds x="160" y="220" width="100" height="60" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_task-trigger-collect-i" bpmnElement="task-trigger-collect-i">
+                <dc:Bounds x="160" y="310" width="100" height="60" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_gw-index-join" bpmnElement="gw-index-join">
+                <dc:Bounds x="320" y="273" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_end-index" bpmnElement="end-index">
+                <dc:Bounds x="420" y="280" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="E_f2" bpmnElement="f2">
+                <di:waypoint x="85" y="273" />
+                <di:waypoint x="85" y="250" />
+                <di:waypoint x="160" y="250" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_f3" bpmnElement="f3">
+                <di:waypoint x="85" y="323" />
+                <di:waypoint x="85" y="340" />
+                <di:waypoint x="160" y="340" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_f4" bpmnElement="f4">
+                <di:waypoint x="260" y="250" />
+                <di:waypoint x="345" y="250" />
+                <di:waypoint x="345" y="273" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_f5" bpmnElement="f5">
+                <di:waypoint x="260" y="340" />
+                <di:waypoint x="345" y="340" />
+                <di:waypoint x="345" y="323" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_f6" bpmnElement="f6">
+                <di:waypoint x="370" y="298" />
+                <di:waypoint x="420" y="298" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="SH_pool-collect" bpmnElement="pool-collect" isHorizontal="true">
+                <dc:Bounds x="10" y="500" width="700" height="200" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_start-collect" bpmnElement="start-collect">
+                <dc:Bounds x="70" y="580" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_task-clean" bpmnElement="task-clean">
+                <dc:Bounds x="150" y="568" width="100" height="60" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_task-db-save" bpmnElement="task-db-save">
+                <dc:Bounds x="410" y="520" width="100" height="60" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_task-analysis-save" bpmnElement="task-analysis-save">
+                <dc:Bounds x="410" y="610" width="100" height="60" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="E_s1" bpmnElement="s1">
+                <di:waypoint x="106" y="598" />
+                <di:waypoint x="150" y="598" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_s2" bpmnElement="s2">
+                <di:waypoint x="250" y="598" />
+                <di:waypoint x="300" y="598" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="MessageFlow_1754juj_di" bpmnElement="MessageFlow_1754juj">
+                <di:waypoint x="160" y="340" />
+                <di:waypoint x="88" y="340" />
+                <di:waypoint x="88" y="580" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="ParallelGateway_1j4893s_di" bpmnElement="gw-storage">
+                <dc:Bounds x="300" y="573" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="StartEvent_10oz8ao_di" bpmnElement="start-index">
+                <dc:Bounds x="-298" y="280" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_pool-query" bpmnElement="pool-query" isHorizontal="true">
+                <dc:Bounds x="520" y="200" width="560" height="200" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_end-query" bpmnElement="end-query">
+                <dc:Bounds x="1020" y="280" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_gw-query-join" bpmnElement="gw-query-join">
+                <dc:Bounds x="920" y="273" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_task-trigger-collect-q" bpmnElement="task-trigger-collect-q">
+                <dc:Bounds x="760" y="310" width="100" height="60" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="MessageFlow_0kepety_di" bpmnElement="MessageFlow_0kepety">
+                <di:waypoint x="818" y="370" />
+                <di:waypoint x="818" y="470" />
+                <di:waypoint x="120" y="470" />
+                <di:waypoint x="88" y="530" />
+                <di:waypoint x="88" y="580" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="SH_task-highlight-search" bpmnElement="task-highlight-search">
+                <dc:Bounds x="760" y="220" width="100" height="60" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_gw-query-split" bpmnElement="gw-query-split">
+                <dc:Bounds x="660" y="273" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="SH_start-query" bpmnElement="start-query">
+                <dc:Bounds x="580" y="280" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="E_q1" bpmnElement="q1">
+                <di:waypoint x="616" y="298" />
+                <di:waypoint x="660" y="298" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_q2" bpmnElement="q2">
+                <di:waypoint x="685" y="273" />
+                <di:waypoint x="685" y="250" />
+                <di:waypoint x="760" y="250" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_q3" bpmnElement="q3">
+                <di:waypoint x="685" y="323" />
+                <di:waypoint x="685" y="340" />
+                <di:waypoint x="760" y="340" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_q4" bpmnElement="q4">
+                <di:waypoint x="860" y="250" />
+                <di:waypoint x="945" y="250" />
+                <di:waypoint x="945" y="273" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_q5" bpmnElement="q5">
+                <di:waypoint x="860" y="340" />
+                <di:waypoint x="945" y="340" />
+                <di:waypoint x="945" y="323" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="E_q6" bpmnElement="q6">
+                <di:waypoint x="970" y="298" />
+                <di:waypoint x="1020" y="298" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="SequenceFlow_0qsigmp_di" bpmnElement="SequenceFlow_0qsigmp">
+                <di:waypoint x="510" y="550" />
+                <di:waypoint x="570" y="550" />
+                <di:waypoint x="570" y="573" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="ParallelGateway_1t4ev10_di" bpmnElement="ExclusiveGateway_18msj0f">
+                <dc:Bounds x="545" y="573" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="SequenceFlow_0jaqz6t_di" bpmnElement="SequenceFlow_0jaqz6t">
+                <di:waypoint x="510" y="640" />
+                <di:waypoint x="570" y="640" />
+                <di:waypoint x="570" y="623" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="EndEvent_07tav9e_di" bpmnElement="EndEvent_07tav9e">
+                <dc:Bounds x="632" y="580" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="SequenceFlow_13lvnak_di" bpmnElement="SequenceFlow_13lvnak">
+                <di:waypoint x="595" y="598" />
+                <di:waypoint x="632" y="598" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="SequenceFlow_1bwi6gu_di" bpmnElement="SequenceFlow_1bwi6gu">
+                <di:waypoint x="325" y="623" />
+                <di:waypoint x="325" y="640" />
+                <di:waypoint x="410" y="640" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="SequenceFlow_1o2p4gg_di" bpmnElement="SequenceFlow_1o2p4gg">
+                <di:waypoint x="325" y="573" />
+                <di:waypoint x="325" y="550" />
+                <di:waypoint x="410" y="550" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="SequenceFlow_0xxsv9w_di" bpmnElement="SequenceFlow_0xxsv9w">
+                <di:waypoint x="-262" y="298" />
+                <di:waypoint x="-210" y="298" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="SequenceFlow_1kjl8sa_di" bpmnElement="SequenceFlow_1kjl8sa">
+                <di:waypoint x="-5" y="298" />
+                <di:waypoint x="60" y="298" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="6" y="280" width="44" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="ServiceTask_07crua0_di" bpmnElement="preprocess-index-data">
+                <dc:Bounds x="-210" y="258" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="ExclusiveGateway_0g730g4_di" bpmnElement="ExclusiveGateway_0g730g4" isMarkerVisible="true">
+                <dc:Bounds x="-55" y="273" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="SequenceFlow_1bhd2p8_di" bpmnElement="SequenceFlow_1bhd2p8">
+                <di:waypoint x="-110" y="298" />
+                <di:waypoint x="-55" y="298" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="TextAnnotation_0zndyo5_di" bpmnElement="TextAnnotation_0zndyo5">
+                <dc:Bounds x="0" y="190" width="100" height="30" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="Association_103bdul_di" bpmnElement="Association_103bdul">
+                <di:waypoint x="-18" y="285" />
+                <di:waypoint x="37" y="220" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="EndEvent_1f2zyku_di" bpmnElement="EndEvent_1f2zyku">
+                <dc:Bounds x="-48" y="392" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="SequenceFlow_0wuci03_di" bpmnElement="SequenceFlow_0wuci03">
+                <di:waypoint x="-30" y="323" />
+                <di:waypoint x="-30" y="392" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="-37" y="355" width="44" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>
