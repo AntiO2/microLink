@@ -3,15 +3,13 @@ version: '2'
 services:
 
   activiti-postgres:
-    image: postgres
+    image: postgres:15
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_USER=activiti
       - POSTGRES_DB=activitidb
-    volumes:
-      - "pgdata:/var/lib/postgresql/data"
     restart: unless-stopped
 
   nginx:
@@ -61,8 +59,5 @@ services:
       ACT_KEYCLOAK_RESOURCE:        ${KEYCLOAK_RESOURCE}
       ACTIVITI_CLOUD_MODELING_URL:  localhost:8080
       SERVER_SERVLET_CONTEXT_PATH:  /modeling-service
-
-volumes:
-  pgdata:
 
     

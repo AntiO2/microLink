@@ -10,7 +10,7 @@ spring:
 
   activiti:
     database-schema-update: true
-    check-process-definitions: false
+    check-process-definitions: true
     deployment-mode: single-resource
     history-level: full
     db-history-used: true

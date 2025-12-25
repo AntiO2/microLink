@@ -1,4 +1,4 @@
-package org.microserviceteam.microlink_social;
+package org.microserviceteam.social;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
