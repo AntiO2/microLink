@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:activiti="http://activiti.org/bpmn" name="" targetNamespace="http://activiti.org/social-system">
+    <message id="MSG_STATS" name="RECORD_STATS_MSG" />
+    <message id="MSG_PUSH" name="SEND_PUSH_MSG" />
     <collaboration id="collab-social-system">
         <participant id="part-social" name="social-interaction-service" processRef="social-process" />
         <participant id="part-stats" name="data-statistics-service" processRef="stats-process" />
@@ -31,14 +33,18 @@
         <sequenceFlow id="f3" sourceRef="task-persistence" targetRef="end-social" />
     </process>
     <process id="stats-process" name="stats-process" isExecutable="true">
-        <startEvent id="start-stats" name="msg-in" />
+        <startEvent id="start-stats" name="stats msg">
+            <messageEventDefinition messageRef="MSG_STATS" />
+        </startEvent>
         <serviceTask id="task-stats-logic" name="stats-logic" activiti:delegateExpression="${statsDelegate}" />
         <endEvent id="end-stats" />
         <sequenceFlow id="s1" sourceRef="start-stats" targetRef="task-stats-logic" />
         <sequenceFlow id="s2" sourceRef="task-stats-logic" targetRef="end-stats" />
     </process>
     <process id="push-process" name="push-process" isExecutable="true">
-        <startEvent id="start-push" name="msg-in" />
+        <startEvent id="start-push" name="push msg">
+            <messageEventDefinition messageRef="MSG_PUSH" />
+        </startEvent>
         <serviceTask id="task-push-logic" name="push-logic" activiti:delegateExpression="${pushDelegate}" />
         <endEvent id="end-push" />
         <sequenceFlow id="p1" sourceRef="start-push" targetRef="task-push-logic" />
@@ -79,17 +85,11 @@
             <bpmndi:BPMNShape id="end-social_di" bpmnElement="end-social">
                 <dc:Bounds x="850" y="392" width="36" height="36" />
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape id="start-stats_di" bpmnElement="start-stats">
-                <dc:Bounds x="150" y="740" width="36" height="36" />
-            </bpmndi:BPMNShape>
             <bpmndi:BPMNShape id="task-stats-logic_di" bpmnElement="task-stats-logic">
                 <dc:Bounds x="400" y="720" width="100" height="80" />
             </bpmndi:BPMNShape>
             <bpmndi:BPMNShape id="end-stats_di" bpmnElement="end-stats">
                 <dc:Bounds x="850" y="742" width="36" height="36" />
-            </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape id="start-push_di" bpmnElement="start-push">
-                <dc:Bounds x="150" y="110" width="36" height="36" />
             </bpmndi:BPMNShape>
             <bpmndi:BPMNShape id="task-push-logic_di" bpmnElement="task-push-logic">
                 <dc:Bounds x="400" y="90" width="100" height="80" />
@@ -158,13 +158,31 @@
                 <di:waypoint x="720" y="210" />
                 <di:waypoint x="168" y="210" />
                 <di:waypoint x="168" y="146" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="418" y="185" width="52" height="14" />
+                </bpmndi:BPMNLabel>
             </bpmndi:BPMNEdge>
             <bpmndi:BPMNEdge id="msg-flow-stats_di" bpmnElement="msg-flow-stats">
                 <di:waypoint x="720" y="450" />
                 <di:waypoint x="720" y="620" />
                 <di:waypoint x="168" y="620" />
                 <di:waypoint x="168" y="740" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="415" y="595" width="59" height="14" />
+                </bpmndi:BPMNLabel>
             </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="StartEvent_1ygxs2r_di" bpmnElement="start-push">
+                <dc:Bounds x="150" y="110" width="36" height="36" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="144" y="86" width="48" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="StartEvent_15zzz9s_di" bpmnElement="start-stats">
+                <dc:Bounds x="150" y="740" width="36" height="36" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="144" y="776" width="48" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
         </bpmndi:BPMNPlane>
     </bpmndi:BPMNDiagram>
 </definitions>

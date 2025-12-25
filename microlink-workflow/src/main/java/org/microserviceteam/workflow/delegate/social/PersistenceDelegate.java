@@ -68,7 +68,7 @@ public class PersistenceDelegate extends BaseWorkflowDelegate {
                 subVars.put("parentInstanceId", instanceId);
 
                 // 触发统计流程 (Stats)
-                // invokeStats(execution, subVars);
+                invokeStats(execution, subVars);
             }
 
         } catch (Exception e) {
@@ -82,17 +82,18 @@ public class PersistenceDelegate extends BaseWorkflowDelegate {
     }
 
     private void invokeStats(DelegateExecution execution, Map<String, Object> subVars) {
-        Map<String, Object> statsInfo = workflowService.start("stats-process", subVars);
-        // 触发推送流程 (Push)
-        Map<String, Object> pushInfo = workflowService.start("push-process", subVars);
+        System.out.println("--- 执行持久化任务 ---");
 
-        // 5. 按照规范，从子流程结果中提取 lastOutput 并汇总到当前节点的 lastOutput
-        String statsOut = (String) statsInfo.getOrDefault(Constants.LAST_OUTPUT, "N/A");
-        String pushOut = (String) pushInfo.getOrDefault(Constants.LAST_OUTPUT, "N/A");
+        // 1. 准备传递给子流程的变量（从当前流程获取）
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("action", execution.getVariable("action"));
+        vars.put("operator", execution.getVariable("operator"));
+        vars.put("timestamp", System.currentTimeMillis());
 
-        String finalSummary = String.format("All Done. [Persistence: OK], [Stats: %s], [Push: %s]",
-                statsOut, pushOut);
-
-        execution.setVariable(Constants.LAST_OUTPUT, finalSummary);
+        // 2. 调用封装好的方法触发【统计流程】
+        workflowService.startByMessage("RECORD_STATS_MSG", vars, execution);
+        // 3. 调用封装好的方法触发【推送流程】
+        workflowService.startByMessage("SEND_PUSH_MSG", vars, execution);
+        System.out.println("--- 异步子流程已通过消息机制触发完毕 ---");
     }
 }
