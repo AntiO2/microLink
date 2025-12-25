@@ -1,0 +1,25 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: microlink-service
+  datasource:
+    url: jdbc:mysql://10.77.110.31:3308/microlink_social?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: your_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  # 2. 服务发现 (Nacos)
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 10.77.110.31:8848 # Nacos 服务端地址
+
+  # 3. 全文检索 (Elasticsearch)
+  elasticsearch:
+    uris: http://10.77.110.31:9200
+    connection-timeout: 5s
+    socket-timeout: 3s

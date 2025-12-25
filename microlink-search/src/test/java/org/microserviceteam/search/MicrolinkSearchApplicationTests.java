@@ -1,4 +1,4 @@
-package org.microserviceteam.microlink_search;
+package org.microserviceteam.search;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

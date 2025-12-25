@@ -11,7 +11,8 @@ public enum ResultCode {
 
     // 系统级错误 (5000+)
     SYSTEM_ERROR(5000, "系统繁忙，请稍后再试"),
-    VALIDATION_FAILED(5001, "业务校验失败");
+    VALIDATION_FAILED(5001, "业务校验失败"),
+    PARAM_ERROR(5002, "参数错误");
 
     private final int code;
     private final String message;
