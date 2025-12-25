@@ -1,55 +1,37 @@
 package org.microserviceteam.workflow.controller;
-import org.activiti.api.process.model.ProcessInstance;
 import org.activiti.api.process.model.builders.ProcessPayloadBuilder;
 import org.activiti.api.process.runtime.ProcessRuntime;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RuntimeService;
+import org.activiti.engine.history.HistoricActivityInstance;
+import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricVariableInstance;
+import org.activiti.engine.runtime.ProcessInstance;
 import org.microserviceteam.common.Result;
-import org.microserviceteam.workflow.config.Constants;
+import org.microserviceteam.workflow.service.WorkflowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/workflow")
 public class WorkflowController {
 
     @Autowired
-    private ProcessRuntime processRuntime;
-    @Autowired
-    private RuntimeService runtimeService;
-    @Autowired
-    private HistoryService historyService;
+    private WorkflowService workflowService;
+
     @PostMapping("/start/{processKey}")
-    public Result<Map<String, Object>> start(@PathVariable String processKey, @RequestBody Map<String, Object> variables) {
-        org.activiti.api.process.model.ProcessInstance processInstance = processRuntime.start(ProcessPayloadBuilder
-                .start()
-                .withProcessDefinitionKey(processKey)
-                .withVariables(variables)
-                .build());
-        String instanceId = processInstance.getId();
-        // 同步获取结果 (lastOutput)
-        // 假设你的 Delegate 最终将结果存入了变量 "result" 或 "lastOutput"
-        Object lastOutput = null;
+    public Result<Map<String, Object>> start(@PathVariable String processKey,
+                                             @RequestBody Map<String, Object> variables) {
 
-        HistoricVariableInstance historicVar = historyService.createHistoricVariableInstanceQuery()
-                .processInstanceId(instanceId)
-                .variableName(Constants.LAST_OUTPUT)
-                .singleResult();
+        // 核心逻辑已下推：WorkflowService.start 会递归处理 lastOutput 和子流程回溯
+        Map<String, Object> processDeepInfo = workflowService.start(processKey, variables);
 
-        if (historicVar != null) {
-            lastOutput = historicVar.getValue();
-        }
-
-        Map<String, Object> processInfo = new HashMap<>();
-        processInfo.put("processInstanceId", instanceId);
-        processInfo.put("processDefinitionKey", processKey);
-        processInfo.put("status", processInstance.getStatus().name());
-        processInfo.put(Constants.LAST_OUTPUT, lastOutput);
-
-        return Result.success(processInfo);
+        return Result.success(processDeepInfo);
     }
 }

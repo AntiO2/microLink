@@ -1,4 +1,4 @@
-package org.microserviceteam.workflow.delegate;
+package org.microserviceteam.workflow.delegate.social;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.JavaDelegate;

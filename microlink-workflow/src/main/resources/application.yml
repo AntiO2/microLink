@@ -10,7 +10,7 @@ spring:
 
   activiti:
     database-schema-update: true
-    check-process-definitions: false
+    check-process-definitions: true
     deployment-mode: single-resource
     history-level: full
     db-history-used: true
@@ -21,8 +21,13 @@ spring:
         server-addr: 10.77.110.31:8848
 
   datasource:
-    url: jdbc:mysql://10.77.110.31:3307/microlink_workflow?useUnicode=true&allowPublicKeyRetrieval=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
-    username: root
-    password: password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://10.77.110.31:5432/activitidb?currentSchema=public&reWriteBatchedInserts=true
+    username: activiti
+    password: mypassword
+    driver-class-name: org.postgresql.Driver
+    jpa:
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
+      hibernate:
+        ddl-auto: update
+      show-sql: true
 

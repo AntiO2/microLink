@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:activiti="http://activiti.org/bpmn" name="" targetNamespace="http://activiti.org/social-system">
+    <collaboration id="collab-social-system">
+        <participant id="part-social" name="social-interaction-service" processRef="social-process" />
+        <participant id="part-stats" name="data-statistics-service" processRef="stats-process" />
+        <participant id="part-push" name="message-push-service" processRef="push-process" />
+        <messageFlow id="msg-flow-push" name="send-push" sourceRef="task-persistence" targetRef="start-push" />
+        <messageFlow id="msg-flow-stats" name="record-stats" sourceRef="task-persistence" targetRef="start-stats" />
+    </collaboration>
+    <process id="social-process" name="social-interaction-process" isExecutable="true">
+        <startEvent id="start-social" name="start" />
+        <exclusiveGateway id="gw-type" name="type-split" default="flow-like" />
+        <serviceTask id="task-like" name="like" activiti:delegateExpression="${socialDelegate}" />
+        <serviceTask id="task-comment" name="comment" activiti:delegateExpression="${socialDelegate}" />
+        <serviceTask id="task-follow" name="follow" activiti:delegateExpression="${socialDelegate}" />
+        <exclusiveGateway id="gw-join" name="join-back" />
+        <serviceTask id="task-persistence" name="persistence" activiti:delegateExpression="${persistenceDelegate}" />
+        <endEvent id="end-social" />
+        <sequenceFlow id="f1" sourceRef="start-social" targetRef="gw-type" />
+        <sequenceFlow id="flow-like" sourceRef="gw-type" targetRef="task-like" />
+        <sequenceFlow id="flow-comment" sourceRef="gw-type" targetRef="task-comment">
+            <conditionExpression xsi:type="tFormalExpression">${action == 'COMMENT'}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow-follow" sourceRef="gw-type" targetRef="task-follow">
+            <conditionExpression xsi:type="tFormalExpression">${action == 'FOLLOW'}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="j1" sourceRef="task-like" targetRef="gw-join" />
+        <sequenceFlow id="j2" sourceRef="task-comment" targetRef="gw-join" />
+        <sequenceFlow id="j3" sourceRef="task-follow" targetRef="gw-join" />
+        <sequenceFlow id="f2" sourceRef="gw-join" targetRef="task-persistence" />
+        <sequenceFlow id="f3" sourceRef="task-persistence" targetRef="end-social" />
+    </process>
+    <process id="stats-process" name="stats-process" isExecutable="true">
+        <startEvent id="start-stats" name="msg-in" />
+        <serviceTask id="task-stats-logic" name="stats-logic" activiti:delegateExpression="${statsDelegate}" />
+        <endEvent id="end-stats" />
+        <sequenceFlow id="s1" sourceRef="start-stats" targetRef="task-stats-logic" />
+        <sequenceFlow id="s2" sourceRef="task-stats-logic" targetRef="end-stats" />
+    </process>
+    <process id="push-process" name="push-process" isExecutable="true">
+        <startEvent id="start-push" name="msg-in" />
+        <serviceTask id="task-push-logic" name="push-logic" activiti:delegateExpression="${pushDelegate}" />
+        <endEvent id="end-push" />
+        <sequenceFlow id="p1" sourceRef="start-push" targetRef="task-push-logic" />
+        <sequenceFlow id="p2" sourceRef="task-push-logic" targetRef="end-push" />
+    </process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="collab-social-system">
+            <bpmndi:BPMNShape id="part-social_di" bpmnElement="part-social" isHorizontal="true">
+                <dc:Bounds x="100" y="240" width="900" height="340" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="part-stats_di" bpmnElement="part-stats" isHorizontal="true">
+                <dc:Bounds x="100" y="680" width="900" height="150" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="part-push_di" bpmnElement="part-push" isHorizontal="true">
+                <dc:Bounds x="100" y="50" width="900" height="150" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="start-social_di" bpmnElement="start-social">
+                <dc:Bounds x="150" y="392" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="gw-type_di" bpmnElement="gw-type" isMarkerVisible="true">
+                <dc:Bounds x="240" y="385" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="task-like_di" bpmnElement="task-like">
+                <dc:Bounds x="360" y="260" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="task-comment_di" bpmnElement="task-comment">
+                <dc:Bounds x="360" y="370" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="task-follow_di" bpmnElement="task-follow">
+                <dc:Bounds x="360" y="480" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="gw-join_di" bpmnElement="gw-join" isMarkerVisible="true">
+                <dc:Bounds x="530" y="385" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="task-persistence_di" bpmnElement="task-persistence">
+                <dc:Bounds x="660" y="370" width="120" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="end-social_di" bpmnElement="end-social">
+                <dc:Bounds x="850" y="392" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="start-stats_di" bpmnElement="start-stats">
+                <dc:Bounds x="150" y="740" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="task-stats-logic_di" bpmnElement="task-stats-logic">
+                <dc:Bounds x="400" y="720" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="end-stats_di" bpmnElement="end-stats">
+                <dc:Bounds x="850" y="742" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="start-push_di" bpmnElement="start-push">
+                <dc:Bounds x="150" y="110" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="task-push-logic_di" bpmnElement="task-push-logic">
+                <dc:Bounds x="400" y="90" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="end-push_di" bpmnElement="end-push">
+                <dc:Bounds x="850" y="112" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="f1_di" bpmnElement="f1">
+                <di:waypoint x="186" y="410" />
+                <di:waypoint x="240" y="410" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="flow-like_di" bpmnElement="flow-like">
+                <di:waypoint x="265" y="385" />
+                <di:waypoint x="265" y="300" />
+                <di:waypoint x="360" y="300" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="flow-comment_di" bpmnElement="flow-comment">
+                <di:waypoint x="290" y="410" />
+                <di:waypoint x="360" y="410" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="flow-follow_di" bpmnElement="flow-follow">
+                <di:waypoint x="265" y="435" />
+                <di:waypoint x="265" y="520" />
+                <di:waypoint x="360" y="520" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="j1_di" bpmnElement="j1">
+                <di:waypoint x="460" y="300" />
+                <di:waypoint x="555" y="300" />
+                <di:waypoint x="555" y="385" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="j2_di" bpmnElement="j2">
+                <di:waypoint x="460" y="410" />
+                <di:waypoint x="530" y="410" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="j3_di" bpmnElement="j3">
+                <di:waypoint x="460" y="520" />
+                <di:waypoint x="555" y="520" />
+                <di:waypoint x="555" y="435" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="f2_di" bpmnElement="f2">
+                <di:waypoint x="580" y="410" />
+                <di:waypoint x="660" y="410" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="f3_di" bpmnElement="f3">
+                <di:waypoint x="780" y="410" />
+                <di:waypoint x="850" y="410" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="s1_di" bpmnElement="s1">
+                <di:waypoint x="186" y="758" />
+                <di:waypoint x="400" y="758" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="s2_di" bpmnElement="s2">
+                <di:waypoint x="500" y="760" />
+                <di:waypoint x="850" y="760" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="p1_di" bpmnElement="p1">
+                <di:waypoint x="186" y="128" />
+                <di:waypoint x="400" y="128" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="p2_di" bpmnElement="p2">
+                <di:waypoint x="500" y="130" />
+                <di:waypoint x="850" y="130" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="msg-flow-push_di" bpmnElement="msg-flow-push">
+                <di:waypoint x="720" y="370" />
+                <di:waypoint x="720" y="210" />
+                <di:waypoint x="168" y="210" />
+                <di:waypoint x="168" y="146" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="msg-flow-stats_di" bpmnElement="msg-flow-stats">
+                <di:waypoint x="720" y="450" />
+                <di:waypoint x="720" y="620" />
+                <di:waypoint x="168" y="620" />
+                <di:waypoint x="168" y="740" />
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>

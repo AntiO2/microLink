@@ -18,7 +18,7 @@
 
 	<modules>
 		<module>microlink-common</module>
-		<module>microlink-user</module>
+<!--		<module>microlink-user</module>-->
 		<module>microlink-content</module>
 		<module>microlink-social</module>
 		<module>microlink-search</module>
@@ -29,7 +29,10 @@
 
 	<properties>
 		<java.version>17</java.version> <spring-cloud.version>2021.0.8</spring-cloud.version> <spring-cloud-alibaba.version>2021.0.5.0</spring-cloud-alibaba.version> <mybatis-spring-boot.version>2.3.1</mybatis-spring-boot.version>
+		<lombok.version>1.18.30</lombok.version>
 		<skipTests>true</skipTests>
+		<maven.test.skip>true</maven.test.skip>
+		<mybatis-plus.version>3.5.1</mybatis-plus.version>
 	</properties>
 
 	<dependencies>
@@ -42,6 +45,20 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-freemarker</artifactId>
 		</dependency>
 	</dependencies>
 
@@ -66,6 +83,16 @@
 				<artifactId>mybatis-spring-boot-starter</artifactId>
 				<version>${mybatis-spring-boot.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>com.baomidou</groupId>
+				<artifactId>mybatis-plus-boot-starter</artifactId>
+				<version>${mybatis-plus.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.baomidou</groupId>
+				<artifactId>mybatis-plus-annotation</artifactId>
+				<version>${mybatis-plus.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -73,17 +100,29 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.1.2</version> <configuration>
+				<skipTests>true</skipTests>
+			</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.10.1</version>
 				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<skip>true</skip>
 				</configuration>
 			</plugin>
 		</plugins>

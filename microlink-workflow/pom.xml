@@ -7,7 +7,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>microlink-workflow</artifactId>
-    <name>Archetype - microlink-workflow</name>
+    <name>microlink-workflow</name>
     <url>http://maven.apache.org</url>
     <dependencies>
         <dependency>
