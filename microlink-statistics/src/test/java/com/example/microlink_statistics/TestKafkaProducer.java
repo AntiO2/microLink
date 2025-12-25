@@ -34,11 +34,11 @@ public class TestKafkaProducer implements CommandLineRunner {
 
         // --- 模拟用户活跃事件 (用于计算 DAU) ---
         // 模拟 3 个不同用户的活动
-        sendUserActivity("user-101");
-        sendUserActivity("user-256");
-        sendUserActivity("user-999");
+        sendUserActivity(101L);
+        sendUserActivity(256L);
+        sendUserActivity(999L);
         // 模拟 user-101 的重复活动，HyperLogLog 会自动去重
-        sendUserActivity("user-101");
+        sendUserActivity(101L);
 
         // --- 模拟内容交互事件 ---
         // 针对内容 ID 1001
@@ -57,7 +57,7 @@ public class TestKafkaProducer implements CommandLineRunner {
         logger.info("==========================================================");
     }
 
-    private void sendUserActivity(String userId) {
+    private void sendUserActivity(Long userId) {
         UserActivityEvent event = new UserActivityEvent();
         event.setUserId(userId);
         event.setTimestamp(LocalDateTime.now());
@@ -69,7 +69,7 @@ public class TestKafkaProducer implements CommandLineRunner {
     private void sendContentInteraction(Long contentId, String interactionType) {
         ContentInteractionEvent event = new ContentInteractionEvent();
         event.setContentId(contentId);
-        event.setUserId("user-test-" + contentId); // 简单模拟一个用户ID
+        event.setUserId(contentId*100); // 简单模拟一个用户ID
         event.setEventType(interactionType);
         event.setTimestamp(LocalDateTime.now());
         logger.info("Sending ContentInteractionEvent for contentId: {}, type: {}", contentId, interactionType);

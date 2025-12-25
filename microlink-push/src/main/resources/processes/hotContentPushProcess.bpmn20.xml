@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:flowable="http://flowable.org/bpmn"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="hotContentPushProcess" name="Hot Content Push Process" isExecutable="true">
+
+        <startEvent id="startEvent" name="Start Push"/>
+
+        <sequenceFlow id="flowToFetchContent" sourceRef="startEvent" targetRef="fetchContentTask"/>
+
+        <serviceTask id="fetchContentTask" name="Fetch Published Content"
+                     flowable:delegateExpression="${fetchPublishedContentDelegate}"/>
+
+        <sequenceFlow id="flowToFetchStats" sourceRef="fetchContentTask" targetRef="fetchStatsTask"/>
+
+        <serviceTask id="fetchStatsTask" name="Fetch Content Statistics"
+                     flowable:delegateExpression="${fetchContentStatisticsDelegate}"/>
+
+        <sequenceFlow id="flowToRank" sourceRef="fetchStatsTask" targetRef="rankContentTask"/>
+
+        <serviceTask id="rankContentTask" name="Rank and Select Top 10"
+                     flowable:delegateExpression="${rankAndSelectTopContentDelegate}"/>
+
+        <sequenceFlow id="flowToEnd" sourceRef="rankContentTask" targetRef="endEvent"/>
+
+        <endEvent id="endEvent" name="End Push"/>
+
+    </process>
+</definitions>
