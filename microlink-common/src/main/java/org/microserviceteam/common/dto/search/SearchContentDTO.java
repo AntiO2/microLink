@@ -16,4 +16,20 @@ public class SearchContentDTO {
     // 高亮片段映射（Key 为字段名，Value 为带 HTML 的高亮字符串）
     // 例如：{"title": "如何学习<em>Java</em>"}
     private Map<String, String> highlights;
+
+    public ContentDoc getSource() {
+        return source;
+    }
+
+    public void setSource(ContentDoc source) {
+        this.source = source;
+    }
+
+    public Map<String, String> getHighlights() {
+        return highlights;
+    }
+
+    public void setHighlights(Map<String, String> highlights) {
+        this.highlights = highlights;
+    }
 }

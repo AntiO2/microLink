@@ -4,7 +4,9 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.microserviceteam.common.dto.search.ContentDoc;
 import org.microserviceteam.common.dto.search.SearchContentDTO;
+import org.microserviceteam.common.dto.search.UserDoc;
 import org.microserviceteam.search.ContentSearchRepository;
+import org.microserviceteam.search.UserSearchRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,9 @@ public class ContentSearchService {
     @Autowired
     private ContentSearchRepository repository;
 
+    @Autowired
+    private UserSearchRepository userRepository;
+
     // 使用新版推荐的 ElasticsearchOperations
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;
@@ -39,7 +44,15 @@ public class ContentSearchService {
      */
     public void save(ContentDoc doc) {
         repository.save(doc);
-        log.info(">>> [ES搜索] 已成功索引文档, ID: {}", doc.getId());
+        log.info(">>> [ES搜索] 已成功索引内容文档, ID: {}", doc.getId());
+    }
+
+    /**
+     * 添加或更新用户索引文档
+     */
+    public void saveUser(UserDoc doc) {
+        userRepository.save(doc);
+        log.info(">>> [ES搜索] 已成功索引用户文档, ID: {}", doc.getId());
     }
 
     /**
@@ -90,7 +103,10 @@ public class ContentSearchService {
                 highlightMap.put(field, fragments.get(0).toString());
             });
 
-            return new SearchContentDTO(source, highlightMap);
+            SearchContentDTO dto = new SearchContentDTO();
+            dto.setSource(source);
+            dto.setHighlights(highlightMap);
+            return dto;
         }).collect(Collectors.toList());
     }
 }
