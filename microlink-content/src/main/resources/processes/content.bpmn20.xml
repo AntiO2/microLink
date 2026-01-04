@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="http://activiti.org/content-system">
+
+    <process id="content-publish-process-v2" name="Content Publish Process" isExecutable="true">
+        <startEvent id="startEvent" name="Start" />
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="autoReviewTask" />
+        
+        <serviceTask id="autoReviewTask" name="Automated Content Review" activiti:delegateExpression="${contentReviewDelegate}" />
+        <sequenceFlow id="flow2" sourceRef="autoReviewTask" targetRef="autoReviewGateway" />
+        
+        <exclusiveGateway id="autoReviewGateway" name="Auto Review Result" />
+        <sequenceFlow id="flowAutoApproved" name="Auto Approved" sourceRef="autoReviewGateway" targetRef="adminApprovalTask">
+            <conditionExpression xsi:type="tFormalExpression">${autoCheckPassed == true}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flowAutoRejected" name="Auto Rejected" sourceRef="autoReviewGateway" targetRef="rejectTask">
+             <conditionExpression xsi:type="tFormalExpression">${autoCheckPassed == false}</conditionExpression>
+        </sequenceFlow>
+
+        <userTask id="adminApprovalTask" name="Admin Approval" activiti:assignee="admin">
+            <documentation>Approve or reject content publication.</documentation>
+        </userTask>
+        <sequenceFlow id="flow3" sourceRef="adminApprovalTask" targetRef="adminReviewGateway" />
+
+        <exclusiveGateway id="adminReviewGateway" name="Admin Review Result" />
+        <sequenceFlow id="flowAdminApproved" name="Approved" sourceRef="adminReviewGateway" targetRef="publishTask">
+            <conditionExpression xsi:type="tFormalExpression">${approved == true}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flowAdminRejected" name="Rejected" sourceRef="adminReviewGateway" targetRef="rejectTask">
+            <conditionExpression xsi:type="tFormalExpression">${approved == false}</conditionExpression>
+        </sequenceFlow>
+
+        <serviceTask id="publishTask" name="Publish Content" activiti:delegateExpression="${contentPublishDelegate}" />
+        <sequenceFlow id="flow4" sourceRef="publishTask" targetRef="notificationTask" />
+
+        <serviceTask id="rejectTask" name="Reject Content" activiti:delegateExpression="${contentRejectDelegate}" />
+        <sequenceFlow id="flow5" sourceRef="rejectTask" targetRef="notificationTask" />
+
+        <serviceTask id="notificationTask" name="Send Notification" activiti:delegateExpression="${contentApprovalNotificationDelegate}" />
+        <sequenceFlow id="flow6" sourceRef="notificationTask" targetRef="endEvent" />
+
+        <endEvent id="endEvent" name="End" />
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_content-publish">
+        <bpmndi:BPMNPlane bpmnElement="content-publish-process-v2" id="BPMNPlane_content-publish">
+            <bpmndi:BPMNShape bpmnElement="startEvent" id="BPMNShape_startEvent">
+                <omgdc:Bounds height="35.0" width="35.0" x="50.0" y="100.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="autoReviewTask" id="BPMNShape_autoReviewTask">
+                <omgdc:Bounds height="60.0" width="100.0" x="130.0" y="87.5"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="autoReviewGateway" id="BPMNShape_autoReviewGateway" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="280.0" y="97.5"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="adminApprovalTask" id="BPMNShape_adminApprovalTask">
+                <omgdc:Bounds height="60.0" width="100.0" x="370.0" y="87.5"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="adminReviewGateway" id="BPMNShape_adminReviewGateway" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="520.0" y="97.5"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="publishTask" id="BPMNShape_publishTask">
+                <omgdc:Bounds height="60.0" width="100.0" x="610.0" y="87.5"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="rejectTask" id="BPMNShape_rejectTask">
+                <omgdc:Bounds height="60.0" width="100.0" x="450.0" y="200.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="notificationTask" id="BPMNShape_notificationTask">
+                <omgdc:Bounds height="60.0" width="100.0" x="760.0" y="143.75"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEvent" id="BPMNShape_endEvent">
+                <omgdc:Bounds height="35.0" width="35.0" x="910.0" y="156.25"/>
+            </bpmndi:BPMNShape>
+            
+            <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+                <omgdi:waypoint x="85.0" y="117.5"/>
+                <omgdi:waypoint x="130.0" y="117.5"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+                <omgdi:waypoint x="230.0" y="117.5"/>
+                <omgdi:waypoint x="280.0" y="117.5"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flowAutoApproved" id="BPMNEdge_flowAutoApproved">
+                <omgdi:waypoint x="320.0" y="117.5"/>
+                <omgdi:waypoint x="370.0" y="117.5"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flowAutoRejected" id="BPMNEdge_flowAutoRejected">
+                <omgdi:waypoint x="300.0" y="137.5"/>
+                <omgdi:waypoint x="300.0" y="230.0"/>
+                <omgdi:waypoint x="450.0" y="230.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+                <omgdi:waypoint x="470.0" y="117.5"/>
+                <omgdi:waypoint x="520.0" y="117.5"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flowAdminApproved" id="BPMNEdge_flowAdminApproved">
+                <omgdi:waypoint x="560.0" y="117.5"/>
+                <omgdi:waypoint x="610.0" y="117.5"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flowAdminRejected" id="BPMNEdge_flowAdminRejected">
+                <omgdi:waypoint x="540.0" y="137.5"/>
+                <omgdi:waypoint x="540.0" y="200.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+                <omgdi:waypoint x="710.0" y="117.5"/>
+                <omgdi:waypoint x="735.0" y="117.5"/>
+                <omgdi:waypoint x="735.0" y="173.75"/>
+                <omgdi:waypoint x="760.0" y="173.75"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+                <omgdi:waypoint x="550.0" y="230.0"/>
+                <omgdi:waypoint x="735.0" y="230.0"/>
+                <omgdi:waypoint x="735.0" y="173.75"/>
+                <omgdi:waypoint x="760.0" y="173.75"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+                <omgdi:waypoint x="860.0" y="173.75"/>
+                <omgdi:waypoint x="910.0" y="173.75"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>
