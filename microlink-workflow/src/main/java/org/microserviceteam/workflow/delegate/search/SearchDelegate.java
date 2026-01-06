@@ -1,18 +1,20 @@
 package org.microserviceteam.workflow.delegate.search;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.microserviceteam.common.Result;
 import org.microserviceteam.common.ResultCode;
 import org.microserviceteam.common.dto.search.ContentDoc;
 import org.microserviceteam.common.dto.search.SearchContentDTO;
+import org.microserviceteam.common.dto.search.UserIndex;
 import org.microserviceteam.workflow.client.SearchClient;
 import org.microserviceteam.workflow.config.Constants;
 import org.microserviceteam.workflow.delegate.BaseWorkflowDelegate;
 import org.microserviceteam.workflow.util.ProcessVariableUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
@@ -24,78 +26,115 @@ public class SearchDelegate extends BaseWorkflowDelegate {
     @Autowired
     private SearchClient searchClient;
 
+    private final ObjectMapper mapper = new ObjectMapper();
+
     @Override
     protected String run(DelegateExecution execution) throws Exception {
         String activityId = execution.getCurrentActivityId();
         String output;
 
-        if ("task-es-index".equals(activityId)) {
-            // 1. 从流程变量获取透传的 Map
-            Object rawDoc = execution.getVariable("contentDoc");
-            log.info(">>> [搜索服务] 正在将透传的 KV 数据转换为 ContentDoc 对象...");
+        switch (activityId) {
+            case "task-es-index":
+                output = handleContentIndexing(execution);
+                break;
 
-            if (rawDoc instanceof Map) {
-                try {
-                    // 2. 使用 ObjectMapper 执行转换 (将 Map 转换为实体类 ContentDoc)
-                    // 这样会自动匹配 Postman 中的 Key 与 ContentDoc 中的属性名
-                    ObjectMapper mapper = new ObjectMapper();
-                    ContentDoc doc = mapper.convertValue(rawDoc, ContentDoc.class);
+            case "task-highlight-search":
+                output = handleHighlightSearch(execution);
+                break;
 
-                    // 3. 校验关键字段（可选）
-                    if (doc == null || doc.getId() == null) {
-                        output = "ES Indexing Failed: Converted object or ID is null";
-                    } else {
-                        // 4. 调用持久化接口
-                        log.info(">>> [ES持久化] 准备写入对象: {}", doc);
-                        Result<String> indexResult = searchClient.indexContent(doc);
+            case "task-user-index":
+                // 新增：处理用户索引同步逻辑
+                output = handleUserIndexing(execution);
+                break;
 
-                        if (indexResult != null && indexResult.getCode() == 200) {
-                            output = "ES Indexing Success for ID: " + doc.getId();
-                            execution.setVariable("isIndexSuccess", indexResult.getMessage());
-                        } else {
-                            output = "ES Indexing Failed: " + (indexResult != null ? indexResult.getMessage() : "Unknown");
-                            execution.setVariable("isIndexSuccess", false);
-                        }
-                    }
-                } catch (IllegalArgumentException e) {
-                    // 转换失败，通常是字段类型不匹配
-                    log.error(">>> [类型转换异常] Map 转 ContentDoc 失败: ", e);
-                    output = "Type Conversion Error: " + e.getMessage();
-                    execution.setVariable("isIndexSuccess", false);
-                } catch (Exception e) {
-                    log.error(">>> [系统异常]: ", e);
-                    output = "System Error: " + e.getMessage();
-                    throw e; // 抛出异常触发流程回滚
-                }
-            } else {
-                output = "ES Indexing Failed: contentDoc variable is not a Map";
-                log.error(">>> [参数错误] 流程变量 contentDoc 类型错误: {}", rawDoc != null ? rawDoc.getClass() : "null");
-            }
-        } else if ("task-highlight-search".equals(activityId)) {
-            // 搜索逻辑：获取查询词
-            String query = ProcessVariableUtil.getString(execution, "q", "");
-            log.info(">>> [搜索服务] 执行高亮查询: {}", query);
-            Result<List<SearchContentDTO>> listResult = searchClient.searchWithHighlight(query);
+            case "task-user-search":
+                // 新增：处理用户检索逻辑
+                output = handleUserSearch(execution);
+                break;
 
-            // 3. 处理结果并存入变量
-            if (listResult != null && listResult.getCode() == ResultCode.SUCCESS.getCode()) {
-                List<SearchContentDTO> data = listResult.getData();
-
-                // 将搜索结果存入流程变量，供 Controller 或后续节点使用
-                execution.setVariable("searchResult", data.toString());
-                output = "Search Completed. Found " + (data != null ? data.size() : 0) + " items.";
-            } else {
-                // 记录失败原因
-                String errorMsg = listResult != null ? listResult.getMessage() : "Response is null";
-                output = "Search Failed: " + errorMsg;
-                // 可以根据业务需求决定是否设置标志位
-                execution.setVariable("isSearchSuccess", false);
-            }
-        } else {
-            output = "Search Service: No action defined for node " + activityId;
+            default:
+                output = "Search Service: No action defined for node " + activityId;
         }
 
         execution.setVariable(Constants.LAST_OUTPUT, output);
         return output;
+    }
+
+    /**
+     * 处理内容索引 (task-es-index)
+     */
+    private String handleContentIndexing(DelegateExecution execution) {
+        Object rawDoc = execution.getVariable("contentDoc");
+        if (!(rawDoc instanceof Map)) {
+            return "ES Content Indexing Failed: contentDoc is not a Map";
+        }
+
+        try {
+            ContentDoc doc = mapper.convertValue(rawDoc, ContentDoc.class);
+            Result<String> result = searchClient.indexContent(doc);
+            boolean success = result != null && result.getCode() == 200;
+            execution.setVariable("isIndexSuccess", success);
+            return success ? "Content Indexing Success ID: " + doc.getId() : "Failed: " + result.getMessage();
+        } catch (Exception e) {
+            log.error(">>> [Content Indexing Error]: ", e);
+            return "Error: " + e.getMessage();
+        }
+    }
+
+    /**
+     * 处理高亮搜索 (task-highlight-search)
+     */
+    private String handleHighlightSearch(DelegateExecution execution) {
+        String query = ProcessVariableUtil.getString(execution, "q", "");
+        Result<List<SearchContentDTO>> result = searchClient.searchWithHighlight(query);
+
+        if (result != null && result.getCode() == ResultCode.SUCCESS.getCode()) {
+            execution.setVariable("searchResult", result.getData());
+            return "Search Success. Found " + (result.getData() != null ? result.getData().size() : 0);
+        }
+        return "Search Failed";
+    }
+
+    /**
+     * 新增：处理用户同步逻辑 (task-user-index)
+     */
+    private String handleUserIndexing(DelegateExecution execution) {
+        Object rawUser = execution.getVariable("userIndexDoc");
+        log.info(">>> [搜索服务] 正在同步用户索引数据...");
+
+        if (rawUser instanceof Map) {
+            try {
+                UserIndex userIndex = mapper.convertValue(rawUser, UserIndex.class);
+                Result<String> result = searchClient.indexUser(userIndex);
+
+                boolean success = result != null && result.getCode() == 200;
+                execution.setVariable("isUserIndexSuccess", success);
+                return success ? "User Indexing Success ID: " + userIndex.getId() : "User Indexing Failed";
+            } catch (Exception e) {
+                log.error(">>> [User Indexing Error]: ", e);
+                return "User conversion error: " + e.getMessage();
+            }
+        }
+        return "User Indexing Failed: Invalid Input Type";
+    }
+
+    /**
+     * 新增：处理用户分页搜索逻辑 (task-user-search)
+     */
+    private String handleUserSearch(DelegateExecution execution) {
+        String keyword = ProcessVariableUtil.getString(execution, "keyword", "");
+        int page = ProcessVariableUtil.getInt(execution, "page", 0);
+        int size = ProcessVariableUtil.getInt(execution, "size", 10);
+
+        log.info(">>> [搜索服务] 正在检索用户, 关键字: {}, 页码: {}", keyword, page);
+        Result<Page<UserIndex>> result = searchClient.searchUsers(keyword, page, size);
+
+        if (result != null && result.getCode() == ResultCode.SUCCESS.getCode()) {
+            Page<UserIndex> userPage = result.getData();
+            execution.setVariable("userSearchResult", userPage.getContent());
+            execution.setVariable("userTotalCount", userPage.getTotalElements());
+            return "User Search Success. Count: " + userPage.getNumberOfElements();
+        }
+        return "User Search Failed";
     }
 }
