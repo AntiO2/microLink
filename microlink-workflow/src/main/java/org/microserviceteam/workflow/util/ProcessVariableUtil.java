@@ -23,6 +23,29 @@ public class ProcessVariableUtil {
     }
 
     /**
+     * 安全获取整型变量，支持多种数值类型转换
+     * 适用于分页参数 page, size 等
+     */
+    public static int getInt(DelegateExecution execution, String variableName, int defaultValue) {
+        Object value = execution.getVariable(variableName);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        try {
+            if (value instanceof Number) {
+                return ((Number) value).intValue();
+            } else if (value instanceof String) {
+                return Integer.parseInt((String) value);
+            }
+        } catch (Exception e) {
+            logger.error(">>> [变量工具] 变量 {} 转换为 int 失败. 实际值: {}, 错误: {}",
+                    variableName, value, e.getMessage());
+        }
+        return defaultValue;
+    }
+
+    /**
      * 强类型获取变量（泛型转换）
      * @param type 期望的类型 Class
      */
