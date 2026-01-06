@@ -1,27 +1,107 @@
+version: '3.8'
+
 services:
+  # 服务发现与配置中心
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: microlink-nacos
+    environment:
+      - MODE=standalone
+      - JVM_XMS=512m
+      - JVM_XMX=512m
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+
+  # 搜索服务底层引擎
   elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.10'
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: microlink-es
     environment:
-      - 'ELASTIC_PASSWORD=secret'
-      - 'discovery.type=single-node'
-      - 'xpack.security.enabled=false'
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
-      - '9200'
-      - '9300'
-  mysql:
-    image: 'mysql:latest'
+      - "9200:9200"
+
+  # 分布式缓存
+  redis:
+    image: redis:latest
+    container_name: microlink-redis
+    ports:
+      - "6379:6379"
+
+  # 消息队列中间件
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
     environment:
-      - 'MYSQL_DATABASE=mydatabase'
-      - 'MYSQL_PASSWORD=secret'
-      - 'MYSQL_ROOT_PASSWORD=verysecret'
-      - 'MYSQL_USER=myuser'
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
     ports:
-      - '3306:3306'
-  postgres:
-    image: 'postgres:latest'
+      - "9092:9092"
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  # 各微服务专用 MySQL 数据库实例
+  db-user:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=microlink_user
+      - MYSQL_ROOT_PASSWORD=root_secret
     ports:
-      - '5432'
+      - "3307:3306"
+
+  db-content:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=microlink_content
+      - MYSQL_ROOT_PASSWORD=root_secret
+    ports:
+      - "3308:3306"
+
+  db-social:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=microlink_social
+      - MYSQL_ROOT_PASSWORD=root_secret
+    ports:
+      - "3309:3306"
+
+  db-workflow:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=microlink_workflow
+      - MYSQL_ROOT_PASSWORD=root_secret
+    ports:
+      - "3310:3306"
+
+  db-statistics:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=microlink_statistics
+      - MYSQL_ROOT_PASSWORD=root_secret
+    ports:
+      - "3311:3306"
+
+  db-push:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=microlink_push
+      - MYSQL_ROOT_PASSWORD=root_secret
+    ports:
+      - "3312:3306"
+
+  db-search:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=microlink_search
+      - MYSQL_ROOT_PASSWORD=root_secret
+    ports:
+      - "3313:3306"

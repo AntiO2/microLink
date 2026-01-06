@@ -1,8 +1,25 @@
 # microLink - 微服务项目
 
+[![GitHub Repository](https://img.shields.io/badge/GitHub-microLink-blue?logo=github)](https://github.com/AntiO2/microLink)
+
 ## Project Overview
 
 `microLink` 是一个基于 Spring Boot 的微服务架构项目，旨在为社交平台提供用户管理、内容发布、社交互动、搜索、数据统计和内容推送等功能。该项目遵循微服务架构，每个功能模块都被实现为一个独立的微服务。通过这种方式，我们能够实现服务的独立部署和扩展。
+
+![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen?logo=springboot)
+![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2021.0.8-green)
+![Spring Cloud Alibaba](https://img.shields.io/badge/Spring%20Cloud%20Alibaba-2021.0.5.0-red)
+![Activiti 7](https://img.shields.io/badge/Activiti-7.1.0.M6-blue)
+![Kafka](https://img.shields.io/badge/Kafka-3.1.0-black?logo=apachekafka)
+![Elasticsearch](https://img.shields.io/badge/Elasticsearch-7.17.10-005571?logo=elasticsearch)
+![Nacos](https://img.shields.io/badge/Nacos-2.2.3-3399ff)
+![Redis](https://img.shields.io/badge/Redis-latest-dc382d?logo=redis)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479a1?logo=mysql)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-latest-336791?logo=postgresql)
+![MyBatis Plus](https://img.shields.io/badge/MyBatis%20Plus-3.5.1-00a0e9)
+![Maven](https://img.shields.io/badge/Maven-3.6.3-c71a36?logo=apachemaven)
+![Lombok](https://img.shields.io/badge/Lombok-1.18.30-bc2025)
 
 ## Microservice Modules
 
@@ -18,7 +35,7 @@
 
 3. **社交互动微服务 (`microlink-social`)**
    - 处理用户之间的互动，包括点赞、评论、关注等功能。
-   - 使用 Redis 缓存实时数据。
+   - 社交互动逻辑判定与记录存证，包含合规检查 API。
 
 4. **搜索微服务 (`microlink-search`)**
    - 提供内容和用户的搜索功能。
