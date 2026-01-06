@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:flowable="http://flowable.org/bpmn" id="Definitions_0z1k9a6" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.9.0">
+  <bpmn:collaboration id="Collaboration_1hpwvpt">
+    <bpmn:participant id="Participant_17ygzhn" name="Push Hot Content" processRef="hotFeedPushProcess" />
+    <bpmn:participant id="Participant_1312a2t" name="Rank Process" processRef="Process_0125dv9" />
+    <bpmn:messageFlow id="Flow_000mujk" sourceRef="Activity_1p6y56c" targetRef="getHotFeedTask" />
+  </bpmn:collaboration>
+  <bpmn:process id="hotFeedPushProcess" name="Hot Feed Push Process" isExecutable="true">
+    <bpmn:documentation />
+    <bpmn:startEvent id="startTimerEvent" name="Start Push Cycle">
+      <bpmn:outgoing>flowToGetHotFeed</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_0w9x1k5">
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">0 0 * * * ?</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="getHotFeedTask" name="Get Hot Feed Ranking Result" flowable:class="com.microlink.push.logic.GetHotFeedDelegate">
+      <bpmn:documentation>Calls the PushService to get the latest ranked content list and stores it in the 'rankedContent' process variable.</bpmn:documentation>
+      <bpmn:incoming>flowToGetHotFeed</bpmn:incoming>
+      <bpmn:outgoing>flowToContentCheck</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="contentCheckGateway" name="Content Available?">
+      <bpmn:incoming>flowToContentCheck</bpmn:incoming>
+      <bpmn:outgoing>flowToPushContent</bpmn:outgoing>
+      <bpmn:outgoing>flowToEndNoContent</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="pushContentTask" name="Push Content to Users" flowable:class="com.microlink.push.logic.PushContentDelegate">
+      <bpmn:documentation>Executes the main push logic using the content from the 'rankedContent' variable.</bpmn:documentation>
+      <bpmn:incoming>flowToPushContent</bpmn:incoming>
+      <bpmn:outgoing>flowToEndSuccess</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="endEventSuccess" name="Push Successful">
+      <bpmn:incoming>flowToEndSuccess</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="endEventNoContent" name="End (No Content)">
+      <bpmn:incoming>flowToEndNoContent</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flowToGetHotFeed" sourceRef="startTimerEvent" targetRef="getHotFeedTask" />
+    <bpmn:sequenceFlow id="flowToContentCheck" sourceRef="getHotFeedTask" targetRef="contentCheckGateway" />
+    <bpmn:sequenceFlow id="flowToPushContent" name="Yes" sourceRef="contentCheckGateway" targetRef="pushContentTask">
+      <bpmn:documentation>Path taken if the 'rankedContent' list is not empty.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!rankedContent.isEmpty()}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flowToEndNoContent" name="No" sourceRef="contentCheckGateway" targetRef="endEventNoContent">
+      <bpmn:documentation>Path taken if the 'rankedContent' list is empty.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${rankedContent.isEmpty()}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flowToEndSuccess" sourceRef="pushContentTask" targetRef="endEventSuccess" />
+  </bpmn:process>
+  <bpmn:process id="Process_0125dv9">
+    <bpmn:startEvent id="Event_1p74z4i" name="Start Rank">
+      <bpmn:outgoing>Flow_0s7in01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Activity_1f85gvd" name="Fetch Published Content">
+      <bpmn:incoming>Flow_0s7in01</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lrboa7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_0qw89ak" name="Fetch Content Statistics">
+      <bpmn:incoming>Flow_0lrboa7</bpmn:incoming>
+      <bpmn:outgoing>Flow_0b93jlp</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_1p6y56c" name="Rank and Select Top 10">
+      <bpmn:incoming>Flow_0b93jlp</bpmn:incoming>
+      <bpmn:outgoing>Flow_1jokzwn</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_0nuwfnr" name="End Rank">
+      <bpmn:incoming>Flow_1jokzwn</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0s7in01" sourceRef="Event_1p74z4i" targetRef="Activity_1f85gvd" />
+    <bpmn:sequenceFlow id="Flow_0lrboa7" sourceRef="Activity_1f85gvd" targetRef="Activity_0qw89ak" />
+    <bpmn:sequenceFlow id="Flow_0b93jlp" sourceRef="Activity_0qw89ak" targetRef="Activity_1p6y56c" />
+    <bpmn:sequenceFlow id="Flow_1jokzwn" sourceRef="Activity_1p6y56c" targetRef="Event_0nuwfnr" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1hpwvpt">
+      <bpmndi:BPMNShape id="Participant_17ygzhn_di" bpmnElement="Participant_17ygzhn" isHorizontal="true">
+        <dc:Bounds x="130" y="380" width="870" height="250" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0f2l8p7_di" bpmnElement="startTimerEvent">
+        <dc:Bounds x="182" y="457" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="160" y="500" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0m401kp_di" bpmnElement="getHotFeedTask">
+        <dc:Bounds x="280" y="435" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_140f80q_di" bpmnElement="contentCheckGateway" isMarkerVisible="true">
+        <dc:Bounds x="455" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="455" y="413" width="51" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_18y8pvl_di" bpmnElement="pushContentTask">
+        <dc:Bounds x="620" y="530" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1r1n5sw_di" bpmnElement="endEventSuccess">
+        <dc:Bounds x="942" y="552" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="919" y="595" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1w3j4o2_di" bpmnElement="endEventNoContent">
+        <dc:Bounds x="942" y="402" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="918" y="445" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1vun93m_di" bpmnElement="flowToGetHotFeed">
+        <di:waypoint x="218" y="475" />
+        <di:waypoint x="280" y="475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0e2417i_di" bpmnElement="flowToContentCheck">
+        <di:waypoint x="380" y="475" />
+        <di:waypoint x="455" y="475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00o6z7k_di" bpmnElement="flowToPushContent">
+        <di:waypoint x="480" y="500" />
+        <di:waypoint x="480" y="570" />
+        <di:waypoint x="620" y="570" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="543" y="552" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1u3i2kj_di" bpmnElement="flowToEndNoContent">
+        <di:waypoint x="505" y="475" />
+        <di:waypoint x="960" y="475" />
+        <di:waypoint x="960" y="438" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="726" y="457" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08r0y38_di" bpmnElement="flowToEndSuccess">
+        <di:waypoint x="720" y="570" />
+        <di:waypoint x="942" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_1312a2t_di" bpmnElement="Participant_1312a2t" isHorizontal="true">
+        <dc:Bounds x="130" y="80" width="640" height="250" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1p74z4i_di" bpmnElement="Event_1p74z4i">
+        <dc:Bounds x="182" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="174" y="225" width="52" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1f85gvd_di" bpmnElement="Activity_1f85gvd">
+        <dc:Bounds x="270" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0qw89ak_di" bpmnElement="Activity_0qw89ak">
+        <dc:Bounds x="420" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1p6y56c_di" bpmnElement="Activity_1p6y56c">
+        <dc:Bounds x="560" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0nuwfnr_di" bpmnElement="Event_0nuwfnr">
+        <dc:Bounds x="702" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="696" y="225" width="49" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0s7in01_di" bpmnElement="Flow_0s7in01">
+        <di:waypoint x="218" y="200" />
+        <di:waypoint x="270" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lrboa7_di" bpmnElement="Flow_0lrboa7">
+        <di:waypoint x="370" y="200" />
+        <di:waypoint x="420" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0b93jlp_di" bpmnElement="Flow_0b93jlp">
+        <di:waypoint x="520" y="200" />
+        <di:waypoint x="560" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1jokzwn_di" bpmnElement="Flow_1jokzwn">
+        <di:waypoint x="660" y="200" />
+        <di:waypoint x="702" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_000mujk_di" bpmnElement="Flow_000mujk">
+        <di:waypoint x="610" y="240" />
+        <di:waypoint x="610" y="338" />
+        <di:waypoint x="330" y="338" />
+        <di:waypoint x="330" y="435" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
