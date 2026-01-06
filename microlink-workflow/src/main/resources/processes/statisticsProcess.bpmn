@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.9.0">
+  <bpmn:collaboration id="Collaboration_MicrolinkStats">
+    <bpmn:participant id="Participant_External" name="User &#38; Content Service" processRef="Process_External" />
+    <bpmn:participant id="Participant_Kafka" name="Kafka Messaging System" />
+    <bpmn:participant id="Participant_StatisticsService" name="Microlink Statistics Service" processRef="Process_StatisticsService" />
+    <bpmn:participant id="Participant_0eniapn" name="Push Service" processRef="Process_0op7z4h" />
+    <bpmn:messageFlow id="MessageFlow_KafkaToConsumer" name="Event Message" sourceRef="Participant_Kafka" targetRef="Event_MessageReceived" />
+    <bpmn:messageFlow id="Flow_1kpa1ah" sourceRef="Activity_1xttyrl" targetRef="Participant_Kafka" />
+    <bpmn:messageFlow id="Flow_1pnno6b" sourceRef="Activity_0ghbxfo" targetRef="Task_ReturnResult" />
+    <bpmn:messageFlow id="Flow_0jiqjam" sourceRef="Event_ResponseSent" targetRef="Participant_0eniapn" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_External" isExecutable="false">
+    <bpmn:serviceTask id="Activity_1xttyrl" name="Generate User &#38; Content Statistics">
+      <bpmn:incoming>Flow_1hnoyv5</bpmn:incoming>
+      <bpmn:outgoing>Flow_1oevpkc</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1hnoyv5" sourceRef="Event_ActivityOccurs" targetRef="Activity_1xttyrl" />
+    <bpmn:startEvent id="Event_ActivityOccurs" name="User Activity or Content Interaction Occurs">
+      <bpmn:outgoing>Flow_1hnoyv5</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1oevpkc" sourceRef="Activity_1xttyrl" targetRef="Event_EventSent" />
+    <bpmn:endEvent id="Event_EventSent" name="Event Sent">
+      <bpmn:incoming>Flow_1oevpkc</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmn:process id="Process_StatisticsService" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_StatisticsService">
+      <bpmn:lane id="Lane_Consumer" name="Consumer">
+        <bpmn:flowNodeRef>Event_MessageReceived</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EventType</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_14qgg3g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ProcessContent</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_ResponseSent</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReturnResult</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_0mgw9ne" name="DataBase">
+        <bpmn:flowNodeRef>Event_0v496l8</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_1410d9n</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_ApiRequestReceived</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FetchData</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:sequenceFlow id="Flow_Return_To_End" sourceRef="Task_ReturnResult" targetRef="Event_ResponseSent" />
+    <bpmn:sequenceFlow id="Flow_Fetch_To_Return" sourceRef="Task_FetchData" targetRef="Task_ReturnResult" />
+    <bpmn:sequenceFlow id="Flow_1cw4130" name="User Interaction Event" sourceRef="Gateway_EventType" targetRef="Activity_14qgg3g" />
+    <bpmn:sequenceFlow id="Flow_To_Gateway" sourceRef="Event_MessageReceived" targetRef="Gateway_EventType" />
+    <bpmn:serviceTask id="Activity_14qgg3g" name="Update DAU statistics">
+      <bpmn:incoming>Flow_1cw4130</bpmn:incoming>
+      <bpmn:outgoing>Flow_1t7dc1v</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_EventType" name="Check Event Type?">
+      <bpmn:incoming>Flow_To_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_1cw4130</bpmn:outgoing>
+      <bpmn:outgoing>Flow_To_Content</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:startEvent id="Event_MessageReceived" name="Kafka Message Received">
+      <bpmn:outgoing>Flow_To_Gateway</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1" />
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1t7dc1v" sourceRef="Activity_14qgg3g" targetRef="Event_0v496l8" />
+    <bpmn:sequenceFlow id="Flow_To_Content" name="Content Interaction Event" sourceRef="Gateway_EventType" targetRef="Task_ProcessContent" />
+    <bpmn:serviceTask id="Task_ProcessContent" name="Process Content Interaction">
+      <bpmn:incoming>Flow_To_Content</bpmn:incoming>
+      <bpmn:outgoing>Flow_03iaiex</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_03iaiex" sourceRef="Task_ProcessContent" targetRef="Event_1410d9n" />
+    <bpmn:sequenceFlow id="Flow_Api_To_Fetch" sourceRef="Event_ApiRequestReceived" targetRef="Task_FetchData" />
+    <bpmn:endEvent id="Event_ResponseSent" name="Response Sent">
+      <bpmn:incoming>Flow_Return_To_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_ReturnResult" name="Process JSON Result">
+      <bpmn:incoming>Flow_Fetch_To_Return</bpmn:incoming>
+      <bpmn:outgoing>Flow_Return_To_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_0v496l8" name="DAU Updated">
+      <bpmn:incoming>Flow_1t7dc1v</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Event_1410d9n" name="Content Statistics Updated">
+      <bpmn:incoming>Flow_03iaiex</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="Event_ApiRequestReceived" name="API Query Request Received">
+      <bpmn:outgoing>Flow_Api_To_Fetch</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_2" />
+    </bpmn:startEvent>
+    <bpmn:task id="Task_FetchData" name="Fetch Data from Redis/MySQL">
+      <bpmn:incoming>Flow_Api_To_Fetch</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fetch_To_Return</bpmn:outgoing>
+    </bpmn:task>
+  </bpmn:process>
+  <bpmn:process id="Process_0op7z4h">
+    <bpmn:endEvent id="Event_DataReceived" name="Statistics Result Received">
+      <bpmn:incoming>Flow_001w736</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Activity_0ghbxfo" name="Hot Rank Service">
+      <bpmn:incoming>Flow_00hvzkw</bpmn:incoming>
+      <bpmn:outgoing>Flow_001w736</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:startEvent id="Event_NeedData" name="Statistics Data Needed">
+      <bpmn:outgoing>Flow_00hvzkw</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_00hvzkw" sourceRef="Event_NeedData" targetRef="Activity_0ghbxfo" />
+    <bpmn:sequenceFlow id="Flow_001w736" sourceRef="Activity_0ghbxfo" targetRef="Event_DataReceived" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_MicrolinkStats">
+      <bpmndi:BPMNShape id="Participant_External_Shape" bpmnElement="Participant_External" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="400" height="150" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1xttyrl_di" bpmnElement="Activity_1xttyrl">
+        <dc:Bounds x="310" y="100" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ActivityOccurs_Shape" bpmnElement="Event_ActivityOccurs">
+        <dc:Bounds x="222" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="195" y="165" width="90" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_EventSent_Shape" bpmnElement="Event_EventSent">
+        <dc:Bounds x="462" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="453" y="165" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1hnoyv5_di" bpmnElement="Flow_1hnoyv5">
+        <di:waypoint x="258" y="140" />
+        <di:waypoint x="310" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1oevpkc_di" bpmnElement="Flow_1oevpkc">
+        <di:waypoint x="410" y="140" />
+        <di:waypoint x="462" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_Kafka_Shape" bpmnElement="Participant_Kafka" isHorizontal="true">
+        <dc:Bounds x="160" y="270" width="1030" height="60" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_StatisticsService_Shape" bpmnElement="Participant_StatisticsService" isHorizontal="true">
+        <dc:Bounds x="160" y="370" width="1030" height="390" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Consumer_Shape" bpmnElement="Lane_Consumer" isHorizontal="true">
+        <dc:Bounds x="190" y="370" width="1000" height="250" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_0mgw9ne_di" bpmnElement="Lane_0mgw9ne" isHorizontal="true">
+        <dc:Bounds x="190" y="620" width="1000" height="140" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_MessageReceived_Shape" bpmnElement="Event_MessageReceived">
+        <dc:Bounds x="252" y="402" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="232" y="445" width="77" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_EventType_Shape" bpmnElement="Gateway_EventType" isMarkerVisible="true">
+        <dc:Bounds x="355" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="388" y="376" width="64" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_14qgg3g_di" bpmnElement="Activity_14qgg3g">
+        <dc:Bounds x="430" y="490" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0bf8v4o_di" bpmnElement="Task_ProcessContent">
+        <dc:Bounds x="610" y="490" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ResponseSent_Shape" bpmnElement="Event_ResponseSent">
+        <dc:Bounds x="1112" y="512" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1092" y="555" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1cpmb0o_di" bpmnElement="Task_ReturnResult">
+        <dc:Bounds x="930" y="490" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0v496l8_di" bpmnElement="Event_0v496l8">
+        <dc:Bounds x="462" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="446" y="715" width="69" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1410d9n_di" bpmnElement="Event_1410d9n">
+        <dc:Bounds x="642" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="616" y="715" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ApiRequestReceived_Shape" bpmnElement="Event_ApiRequestReceived">
+        <dc:Bounds x="792" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="785" y="715" width="51" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FetchData_Shape" bpmnElement="Task_FetchData">
+        <dc:Bounds x="930" y="650" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_To_Gateway_Edge" bpmnElement="Flow_To_Gateway">
+        <di:waypoint x="288" y="420" />
+        <di:waypoint x="355" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_Content_Edge" bpmnElement="Flow_To_Content">
+        <di:waypoint x="405" y="420" />
+        <di:waypoint x="660" y="420" />
+        <di:waypoint x="660" y="490" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="488" y="402" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Api_To_Fetch_Edge" bpmnElement="Flow_Api_To_Fetch">
+        <di:waypoint x="828" y="690" />
+        <di:waypoint x="930" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fetch_To_Return_Edge" bpmnElement="Flow_Fetch_To_Return">
+        <di:waypoint x="980" y="650" />
+        <di:waypoint x="980" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Return_To_End_Edge" bpmnElement="Flow_Return_To_End">
+        <di:waypoint x="1030" y="530" />
+        <di:waypoint x="1112" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1cw4130_di" bpmnElement="Flow_1cw4130">
+        <di:waypoint x="380" y="445" />
+        <di:waypoint x="380" y="530" />
+        <di:waypoint x="430" y="530" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="356" y="485" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1t7dc1v_di" bpmnElement="Flow_1t7dc1v">
+        <di:waypoint x="480" y="570" />
+        <di:waypoint x="480" y="672" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03iaiex_di" bpmnElement="Flow_03iaiex">
+        <di:waypoint x="660" y="570" />
+        <di:waypoint x="660" y="672" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_0eniapn_di" bpmnElement="Participant_0eniapn" isHorizontal="true">
+        <dc:Bounds x="770" y="80" width="420" height="150" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_DataReceived_Shape" bpmnElement="Event_DataReceived">
+        <dc:Bounds x="1092" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1071" y="175" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ghbxfo_di" bpmnElement="Activity_0ghbxfo">
+        <dc:Bounds x="930" y="110" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_NeedData_Shape" bpmnElement="Event_NeedData">
+        <dc:Bounds x="862" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="845" y="175" width="71" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_00hvzkw_di" bpmnElement="Flow_00hvzkw">
+        <di:waypoint x="898" y="150" />
+        <di:waypoint x="930" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_001w736_di" bpmnElement="Flow_001w736">
+        <di:waypoint x="1030" y="150" />
+        <di:waypoint x="1092" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_KafkaToConsumer_Edge" bpmnElement="MessageFlow_KafkaToConsumer">
+        <di:waypoint x="270" y="330" />
+        <di:waypoint x="270" y="402" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="277" y="353" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1kpa1ah_di" bpmnElement="Flow_1kpa1ah">
+        <di:waypoint x="360" y="180" />
+        <di:waypoint x="360" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1pnno6b_di" bpmnElement="Flow_1pnno6b">
+        <di:waypoint x="980" y="190" />
+        <di:waypoint x="980" y="490" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jiqjam_di" bpmnElement="Flow_0jiqjam">
+        <di:waypoint x="1130" y="512" />
+        <di:waypoint x="1130" y="230" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
